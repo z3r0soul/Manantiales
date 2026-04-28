@@ -23,6 +23,7 @@ if (!require("stringr")) install.packages("stringr")
 library(here)
 library(ggplot2)
 library(readr)
+library(moments)
 library(dplyr) # %>%, mutate, filter, count
 library(lubridate) # year()
 library(stringr) # str_trim, str_squish, str_to_title
@@ -81,8 +82,8 @@ moda(datos$PH_LABORATORIO) # moda
 sd(datos$PH_LABORATORIO, na.rm = TRUE) # desv. estándar muestral
 sd_pobl(datos$PH_LABORATORIO) # desv. estándar poblacional
 meda(datos$PH_LABORATORIO) # MEDA
-skewness(datos$PH_LABORATORIO, na.rm = TRUE) # asimetría
-kurtosis(datos$PH_LABORATORIO, na.rm = TRUE) # curtosis
+skewness(na.omit(datos$PH_LABORATORIO)) # asimetría
+kurtosis(na.omit(datos$PH_LABORATORIO)) # curtosis
 max(datos$PH_LABORATORIO, na.rm = TRUE) - min(datos$PH_LABORATORIO, na.rm = TRUE) # rango
 
 # Temperatura — rango esperado 0-94°C, valores en 0 son sospechosos
@@ -94,8 +95,8 @@ moda(datos$TEMPERATUR)
 sd(datos$TEMPERATUR, na.rm = TRUE)
 sd_pobl(datos$TEMPERATUR)
 meda(datos$TEMPERATUR)
-skewness(datos$TEMPERATUR, na.rm = TRUE)
-kurtosis(datos$TEMPERATUR, na.rm = TRUE)
+skewness(na.omit(datos$TEMPERATUR))
+kurtosis(na.omit(datos$TEMPERATUR))
 max(datos$TEMPERATUR, na.rm = TRUE) - min(datos$TEMPERATUR, na.rm = TRUE)
 
 # Conductividad — rango enorme (0 a 278,000): media recortada muy útil aquí
@@ -107,8 +108,8 @@ moda(datos$CONDUCTIVIDAD)
 sd(datos$CONDUCTIVIDAD, na.rm = TRUE)
 sd_pobl(datos$CONDUCTIVIDAD)
 meda(datos$CONDUCTIVIDAD)
-skewness(datos$CONDUCTIVIDAD, na.rm = TRUE)
-kurtosis(datos$CONDUCTIVIDAD, na.rm = TRUE)
+skewness(na.omit(datos$CONDUCTIVIDAD))
+kurtosis(na.omit(datos$CONDUCTIVIDAD))
 max(datos$CONDUCTIVIDAD, na.rm = TRUE) - min(datos$CONDUCTIVIDAD, na.rm = TRUE)
 
 # Calcio
@@ -120,8 +121,8 @@ moda(datos$CALCIO)
 sd(datos$CALCIO, na.rm = TRUE)
 sd_pobl(datos$CALCIO)
 meda(datos$CALCIO)
-skewness(datos$CALCIO, na.rm = TRUE)
-kurtosis(datos$CALCIO, na.rm = TRUE)
+skewness(na.omit(datos$CALCIO))
+kurtosis(na.omit(datos$CALCIO))
 max(datos$CALCIO, na.rm = TRUE) - min(datos$CALCIO, na.rm = TRUE)
 
 # Sodio — media (706) muy lejana a mediana (171): caso ideal para media recortada
@@ -133,8 +134,8 @@ moda(datos$SODIO)
 sd(datos$SODIO, na.rm = TRUE)
 sd_pobl(datos$SODIO)
 meda(datos$SODIO)
-skewness(datos$SODIO, na.rm = TRUE)
-kurtosis(datos$SODIO, na.rm = TRUE)
+skewness(na.omit(datos$SODIO))
+kurtosis(na.omit(datos$SODIO))
 max(datos$SODIO, na.rm = TRUE) - min(datos$SODIO, na.rm = TRUE)
 
 # GRÁFICO 1: HISTOGRAMA DE pH
@@ -288,7 +289,8 @@ datos %>%
 olor_tabla <- table(na.omit(datos$OLOR_LIMPIO))
 olor_pct <- round(prop.table(olor_tabla) * 100, 1)
 olor_labels <- paste0(names(olor_tabla), "\n", olor_pct, "%")
-pie(olor_tabla, labels = olor_labels, main = "Distribución porcentual del olor del agua")
+pie(olor_tabla, labels = olor_labels, main = "Distribución porcentual
+ del olor del agua")
 
 clasif_tabla <- table(na.omit(datos$CLASIFICACION_LIMPIA))
 clasif_pct <- round(prop.table(clasif_tabla) * 100, 1)

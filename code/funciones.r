@@ -6,8 +6,8 @@
 # Esto es necesario porque R no tiene una función para hallar la moda
 # y se utiliza la función table() para crear una tabla de frecuencias
 # y luego se busca la frecuencia máxima
-
-moda <- function(x) {
+# na.rm = TRUE para que ignore los valores nulos
+moda <- function(x, na.rm = TRUE) {
     tabla <- table(x)
     max_freq <- max(tabla)
     as.numeric(names(tabla[tabla == max_freq]))
@@ -39,4 +39,11 @@ normalizar <- function(x) {
 meda <- function(x) {
     x <- na.omit(x)
     median(abs(x - median(x)))
+}
+
+# 4. Desviación estándar poblacional (divide entre N, no entre N-1)
+# R base usa sd() que es muestral. Esta función calcula la poblacional.
+sd_pobl <- function(x) {
+    x <- na.omit(x)
+    sqrt(mean((x - mean(x))^2))
 }
