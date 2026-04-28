@@ -1,6 +1,4 @@
-# ==============================================================
 # ANÁLISIS EXPLORATORIO — MANANTIALES COLOMBIANOS
-# ==============================================================
 # OBJETIVOS:
 # 1. Describir la distribución de las variables fisicoquímicas
 #    principales usando histogramas y distribución acumulada.
@@ -10,17 +8,32 @@
 # 4. Explorar la relación entre temperatura y pH del manantial.
 # 5. Identificar qué variables tienen más datos faltantes
 #    antes de la limpieza.
-# ==============================================================
 
 
-# Carga de librerías
-install.packages("here")
+# Instalar paquetes si no están instalados
+if (!require("here")) install.packages("here")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("moments")) install.packages("moments")
+if (!require("readr")) install.packages("readr")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("lubridate")) install.packages("lubridate")
+if (!require("stringr")) install.packages("stringr")
+
+# Cargar librerías
 library(here)
 library(ggplot2)
 library(readr)
+library(dplyr) # %>%, mutate, filter, count
+library(lubridate) # year()
+library(stringr) # str_trim, str_squish, str_to_title
+
+# Carga de funciones personalizadas
+source(here("code", "funciones.r"))
 
 
-# Carga y limpieza de datos
+# 1. Carga de datos desde el archivo CSV, identificando valores erróneos y faltanates como NA
+# El CSV tiene valores -999 que significan "dato faltante".
+# read_csv2 ya los convierte a NA gracias a na = c(..., "-999").
 
 datos <- read_csv2(
     here("data", "raw", "Manantial_limpio.csv"),
@@ -28,120 +41,110 @@ datos <- read_csv2(
     na = c("", "NA", "-999")
 )
 
-# El CSV tiene valores -999 que significan "dato faltante".
-# read_csv2 ya los convierte a NA gracias a na = c(..., "-999").
+# 2. Extracción del AÑO y transformación de la columna FECHA
+# Aquí extraemos el AÑO de la columna FECHA y lo guardamos en una nueva columna llamada ANIO.
+# La columna FECHA se convierte a formato de fecha y se extrae el año.
+# as.Date(FECHA, format = "%m/%d/%Y") convierte la columna FECHA a formato de fecha
+# year(FECHA) extrae el año de la columna FECHA
+# as.character() convierte el año a texto (Categorización de ANIO)
 
-# Extraemos el AÑO desde la columna FECHA
 datos <- datos %>%
     mutate(
         FECHA = as.Date(FECHA, format = "%m/%d/%Y"),
         ANIO  = as.character(year(FECHA))
     )
 
-# CLASIFICACIÓN tiene errores de escritura (mayúsculas/minúsculas mezcladas
-# y espacios inconsistentes alrededor de guiones, ej: "Clorurada-Sulfatada"
-# vs "Clorurada - Sulfatada").
-# Pasos de limpieza:
-#   1. str_trim()   → elimina espacios al inicio y al final
-#   2. str_squish() → colapsa espacios internos múltiples en uno
-#   3. gsub()       → estandariza los separadores: siempre " - " (con espacios)
-#   4. str_to_title() → unifica mayúsculas/minúsculas
 
-normalizar <- function(x) {
-    x <- str_trim(x) # quita espacios inicio/fin
-    x <- str_squish(x) # colapsa espacios internos
-    # Normaliza cualquier variante de guion (con o sin espacios) a " - "
-    x <- gsub("\\s*-\\s*", " - ", x)
-    # Normaliza barras "/" igual: " / "
-    x <- gsub("\\s*/\\s*", " / ", x)
-    x <- str_to_title(x) # Title Case
-    return(x)
-}
-
+# 3.  Con tidyverse, mutate se utiliza para crear una nueva columna a partir de otra ya existente.
+# En este caso, se crea la columna CLASIFICACION_LIMPIA a partir de la columna CLASIFICACIÓN y
+# la columna OLOR_LIMPIO a partir de la columna OLOR.
 datos <- datos %>%
     mutate(
         CLASIFICACION_LIMPIA = normalizar(CLASIFICACIÓN),
         OLOR_LIMPIO          = normalizar(OLOR)
     )
 
-# Revisamos cuántas filas y columnas tenemos
+# Revisamos cuántas filas y columnas tenemos (Solo es un debuggeo)
 cat("Filas:", nrow(datos), "| Columnas:", ncol(datos), "\n")
-
-
-# Función para hallar la moda
-
-moda <- function(x) {
-    tabla <- table(x)
-    max_freq <- max(tabla)
-    as.numeric(names(tabla[tabla == max_freq]))
-}
-
 
 # ESTADÍSTICAS DESCRIPTIVAS
 # Para el objetivo #1
 
-# --- pH ---
-# El pH mide la acidez. Va de 0 (muy ácido) a 14 (muy básico). 7 es neutro.
-# La media está por debajo de la mediana (6.33 vs 6.51),
-# lo que sugiere que hay algunos valores muy bajos (ácidos) que la jalan.
-mean(datos$PH_LABORATORIO, na.rm = TRUE) # na.rm=true : ignora los n/a
-median(datos$PH_LABORATORIO, na.rm = TRUE)
-moda(datos$PH_LABORATORIO)
-sd(datos$PH_LABORATORIO, na.rm = TRUE) # desv. muestral
-sqrt(mean((datos$PH_LABORATORIO - mean(datos$PH_LABORATORIO, na.rm = TRUE))^2, na.rm = TRUE)) # desv. poblacional
+# ── Ahora aplicamos todo a cada variable ──────────────────────
 
-# --- Temperatura ---
-# Temperatura del agua en °C al salir del manantial.
-# La media (41.75°C) > mediana (39°C): algunos manantiales muy calientes
-# jalan la media hacia arriba → distribución con cola a la derecha.
+# pH — va de 0 a 14. Mínimo de 0.0 es sospechoso, el rango lo revela.
+cat("── pH ──\n")
+mean(datos$PH_LABORATORIO, na.rm = TRUE) # media
+mean(datos$PH_LABORATORIO, na.rm = TRUE, trim = 0.05) # media recortada 5%
+median(datos$PH_LABORATORIO, na.rm = TRUE) # mediana
+moda(datos$PH_LABORATORIO) # moda
+sd(datos$PH_LABORATORIO, na.rm = TRUE) # desv. estándar muestral
+sd_pobl(datos$PH_LABORATORIO) # desv. estándar poblacional
+meda(datos$PH_LABORATORIO) # MEDA
+skewness(datos$PH_LABORATORIO, na.rm = TRUE) # asimetría
+kurtosis(datos$PH_LABORATORIO, na.rm = TRUE) # curtosis
+max(datos$PH_LABORATORIO, na.rm = TRUE) - min(datos$PH_LABORATORIO, na.rm = TRUE) # rango
 
-# Se identificaron valores de 0°C en la columna TEMPERATUR, los cuales
-# fueron reemplazados por NA.
-temp <- datos$TEMPERATUR
+# Temperatura — rango esperado 0-94°C, valores en 0 son sospechosos
+cat("── Temperatura ──\n")
+mean(datos$TEMPERATUR, na.rm = TRUE)
+mean(datos$TEMPERATUR, na.rm = TRUE, trim = 0.05)
+median(datos$TEMPERATUR, na.rm = TRUE)
+moda(datos$TEMPERATUR)
+sd(datos$TEMPERATUR, na.rm = TRUE)
+sd_pobl(datos$TEMPERATUR)
+meda(datos$TEMPERATUR)
+skewness(datos$TEMPERATUR, na.rm = TRUE)
+kurtosis(datos$TEMPERATUR, na.rm = TRUE)
+max(datos$TEMPERATUR, na.rm = TRUE) - min(datos$TEMPERATUR, na.rm = TRUE)
 
-# Reemplazar 0 por NA
-temp[temp == 0] <- NA
-mean(temp, na.rm = TRUE)
-median(temp, na.rm = TRUE)
-moda(temp)
-sd(temp, na.rm = TRUE)
-sqrt(mean((temp - mean(temp, na.rm = TRUE))^2, na.rm = TRUE))
-
-# --- Conductividad ---
-# Sales disueltas totales en µS/cm. Rango enorme: 0 a 278,000.
-# Media (4375) >> Mediana (1360): hay muy pocos manantiales
-# con salinidad extrema que distorsionan fuertemente la media.
+# Conductividad — rango enorme (0 a 278,000): media recortada muy útil aquí
+cat("── Conductividad ──\n")
 mean(datos$CONDUCTIVIDAD, na.rm = TRUE)
+mean(datos$CONDUCTIVIDAD, na.rm = TRUE, trim = 0.05)
 median(datos$CONDUCTIVIDAD, na.rm = TRUE)
 moda(datos$CONDUCTIVIDAD)
 sd(datos$CONDUCTIVIDAD, na.rm = TRUE)
-sqrt(mean((datos$CONDUCTIVIDAD - mean(datos$CONDUCTIVIDAD, na.rm = TRUE))^2, na.rm = TRUE))
+sd_pobl(datos$CONDUCTIVIDAD)
+meda(datos$CONDUCTIVIDAD)
+skewness(datos$CONDUCTIVIDAD, na.rm = TRUE)
+kurtosis(datos$CONDUCTIVIDAD, na.rm = TRUE)
+max(datos$CONDUCTIVIDAD, na.rm = TRUE) - min(datos$CONDUCTIVIDAD, na.rm = TRUE)
 
-# --- Calcio ---
+# Calcio
+cat("── Calcio ──\n")
 mean(datos$CALCIO, na.rm = TRUE)
+mean(datos$CALCIO, na.rm = TRUE, trim = 0.05)
 median(datos$CALCIO, na.rm = TRUE)
 moda(datos$CALCIO)
 sd(datos$CALCIO, na.rm = TRUE)
-sqrt(mean((datos$CALCIO - mean(datos$CALCIO, na.rm = TRUE))^2, na.rm = TRUE))
+sd_pobl(datos$CALCIO)
+meda(datos$CALCIO)
+skewness(datos$CALCIO, na.rm = TRUE)
+kurtosis(datos$CALCIO, na.rm = TRUE)
+max(datos$CALCIO, na.rm = TRUE) - min(datos$CALCIO, na.rm = TRUE)
 
-# --- Sodio ---
+# Sodio — media (706) muy lejana a mediana (171): caso ideal para media recortada
+cat("── Sodio ──\n")
 mean(datos$SODIO, na.rm = TRUE)
+mean(datos$SODIO, na.rm = TRUE, trim = 0.05)
 median(datos$SODIO, na.rm = TRUE)
 moda(datos$SODIO)
 sd(datos$SODIO, na.rm = TRUE)
-sqrt(mean((datos$SODIO - mean(datos$SODIO, na.rm = TRUE))^2, na.rm = TRUE))
+sd_pobl(datos$SODIO)
+meda(datos$SODIO)
+skewness(datos$SODIO, na.rm = TRUE)
+kurtosis(datos$SODIO, na.rm = TRUE)
+max(datos$SODIO, na.rm = TRUE) - min(datos$SODIO, na.rm = TRUE)
 
-
-# ==============================================================
 # GRÁFICO 1: HISTOGRAMA DE pH
 # (Objetivo 1)
-# ==============================================================
 # POR QUÉ ESTE GRÁFICO: El pH es numérica continua → histograma.
 # Queremos ver si los manantiales son mayormente ácidos, neutros o básicos.
 # bins = 9 porque tenemos 320 filas → regla de Sturges: 1 + log2(320) ≈ 9
 
 ggplot(datos, aes(x = PH_LABORATORIO)) +
-    geom_histogram(bins = 9, fill = "#805233", color = "white") +
+    geom_histogram(bins = 9, fill = "#402816", color = "white") +
     geom_vline(
         xintercept = mean(datos$PH_LABORATORIO, na.rm = TRUE),
         color = "#25a2d3", linetype = "dashed"
@@ -152,7 +155,7 @@ ggplot(datos, aes(x = PH_LABORATORIO)) +
     ) +
     labs(
         title = "Distribución del pH en manantiales colombianos",
-        subtitle = "Cyan = Media (6.33)  |  Azul = Mediana (6.51)",
+        subtitle = " Rosa = Media (6.33)  |  Azul = Mediana (6.51)",
         x = "pH (laboratorio)",
         y = "Número de manantiales"
     )
@@ -161,10 +164,8 @@ ggplot(datos, aes(x = PH_LABORATORIO)) +
 # arrastran la media hacia abajo.
 
 
-# ==============================================================
 # GRÁFICO 2: HISTOGRAMA DE TEMPERATURA
 # (Objetivo 1)
-# ==============================================================
 # POR QUÉ ESTE GRÁFICO: Temperatura es numérica continua → histograma.
 # Nos permite clasificar si el agua es fría (<20°C) o termal (>20°C).
 
@@ -188,10 +189,8 @@ ggplot(datos, aes(x = TEMPERATUR)) +
 # La cola a la derecha (valores >80°C) explica que la media supere a la mediana.
 
 
-# ==============================================================
 # GRÁFICO 3: HISTOGRAMA DE CONDUCTIVIDAD
 # (Objetivo 1)
-# ==============================================================
 # POR QUÉ ESTE GRÁFICO: Conductividad es numérica continua → histograma.
 # Usamos escala logarítmica porque el rango es enorme (0 a 278,000 µS/cm).
 # Sin log, el 95% de los datos se aplasta en la izquierda y no se ve nada.
@@ -209,10 +208,8 @@ ggplot(datos, aes(x = CONDUCTIVIDAD)) +
 # Unos pocos superan los 100,000, indicando agua muy salina (probablemente fumarolas).
 
 
-# ==============================================================
 # GRÁFICO 4: DISTRIBUCIÓN ACUMULADA (ECDF) — pH
 # (Objetivo 1)
-# ==============================================================
 # POR QUÉ ESTE GRÁFICO: El ECDF para pH nos permite afirmar cosas concretas.
 # Por ejemplo: "el X% de los manantiales tiene pH menor a 7 (son ácidos)".
 # Es el gráfico más adecuado para hacer afirmaciones de este tipo.
@@ -231,10 +228,8 @@ ggplot(datos, aes(x = PH_LABORATORIO)) +
 # entonces el 75% de los manantiales son ácidos.
 
 
-# ==============================================================
 # GRÁFICO 5: DISTRIBUCIÓN ACUMULADA — Temperatura
 # (Objetivo 1)
-# ==============================================================
 # POR QUÉ ESTE GRÁFICO: Permite afirmar qué porcentaje del agua
 # supera los 50°C (umbral de agua termal de alta temperatura).
 
@@ -253,7 +248,7 @@ ggplot(datos, aes(x = TEMPERATUR)) +
 
 ggplot(datos, aes(x = CLASIFICACION_LIMPIA, fill = CLASIFICACION_LIMPIA)) +
     geom_bar() +
-    guides(fill = "none") +   # la leyenda es redundante con el eje
+    guides(fill = "none") + # la leyenda es redundante con el eje
     coord_flip() +
     labs(title = "Tipos de agua", x = NULL, y = "Cantidad de Manantiales")
 
@@ -272,33 +267,33 @@ ggplot(datos, aes(x = ANIO)) +
 # ── BARRAS — 2 variables categóricas ──────────────────────────
 # fill = segunda variable  →  barras lado a lado con position = "dodge"
 
-ggplot(datos, aes(x = CLASIFICACION_LIMPIA, fill = OLOR_LIMPIO)) +
-    geom_bar(position = "dodge") +
+datos %>%
+    filter(!is.na(CLASIFICACION_LIMPIA), !is.na(OLOR_LIMPIO)) %>%
+    ggplot(aes(x = CLASIFICACION_LIMPIA, fill = OLOR_LIMPIO)) +
+    geom_bar(position = "fill") +
+    scale_y_continuous(labels = scales::percent) +
     coord_flip() +
     labs(
-        title = "Tipo de agua según su olor",
-        x = NULL, y = "Frecuencia", fill = "Olor"
+        title    = "Proporción de olor según el tipo de agua",
+        subtitle = "Cada barra representa el 100% de los manantiales de ese tipo",
+        x        = NULL,
+        y        = "Proporción",
+        fill     = "Olor"
     )
 
 
 # ── PIE CHART ─────────────────────────────────────────────────
 # NA no es categoría real: se filtra ANTES de pasar a ggplot.
 
-datos %>%
-    filter(!is.na(OLOR_LIMPIO)) %>%
-    ggplot(aes(x = "", fill = OLOR_LIMPIO)) +
-    geom_bar(width = 1) +
-    coord_polar(theta = "y") +
-    theme_void() +
-    labs(title = "Distribución porcentual del olor del agua", fill = "Olor")
+olor_tabla <- table(na.omit(datos$OLOR_LIMPIO))
+olor_pct <- round(prop.table(olor_tabla) * 100, 1)
+olor_labels <- paste0(names(olor_tabla), "\n", olor_pct, "%")
+pie(olor_tabla, labels = olor_labels, main = "Distribución porcentual del olor del agua")
 
-datos %>%
-    filter(!is.na(CLASIFICACION_LIMPIA)) %>%
-    ggplot(aes(x = "", fill = CLASIFICACION_LIMPIA)) +
-    geom_bar(width = 1) +
-    coord_polar(theta = "y") +
-    theme_void() +
-    labs(title = "Proporción de tipos de agua", fill = "Clasificación")
+clasif_tabla <- table(na.omit(datos$CLASIFICACION_LIMPIA))
+clasif_pct <- round(prop.table(clasif_tabla) * 100, 1)
+clasif_labels <- paste0(names(clasif_tabla), "\n", clasif_pct, "%")
+pie(clasif_tabla, labels = clasif_labels, main = "Proporción de tipos de agua")
 
 
 # ── DISPERSIÓN — 2 variables numéricas ────────────────────────
