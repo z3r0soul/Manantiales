@@ -40,10 +40,3 @@ meda <- function(x) {
     x <- na.omit(x)
     median(abs(x - median(x)))
 }
-
-# 4. Desviación estándar poblacional (divide entre N, no entre N-1)
-# R base usa sd() que es muestral. Esta función calcula la poblacional.
-sd_pobl <- function(x) {
-    x <- na.omit(x)
-    sqrt(mean((x - mean(x))^2))
-}
