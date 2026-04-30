@@ -7,10 +7,10 @@
 # y se utiliza la función table() para crear una tabla de frecuencias
 # y luego se busca la frecuencia máxima
 # na.rm = TRUE para que ignore los valores nulos
-moda <- function(x, na.rm = TRUE) {
-    tabla <- table(x)
-    max_freq <- max(tabla)
-    as.numeric(names(tabla[tabla == max_freq]))
+moda <- function(x) {
+    x <- na.omit(x)
+    ux <- unique(x)
+    ux[which.max(tabulate(match(x, ux)))]
 }
 
 # 2. Normalización de las variables categóricas CLASIFICACIÓN y OLOR
@@ -36,6 +36,7 @@ normalizar <- function(x) {
 
 # 3. MEDA: mediana de las desviaciones absolutas respecto a la mediana
 # Más robusta que la desv. estándar cuando hay valores atípicos
+# Indica cuánto se desvían los datos respecto a la mediana, es útil para valores muy extremos
 meda <- function(x) {
     x <- na.omit(x)
     median(abs(x - median(x)))
