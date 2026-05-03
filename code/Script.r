@@ -9,8 +9,9 @@
 # 5. Identificar qué variables tienen más datos faltantes
 #    antes de la limpieza.
 
-
+# ==============================================================
 # Instalar paquetes si no están instalados
+# ==============================================================
 if (!require("here")) install.packages("here")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("moments")) install.packages("moments")
@@ -82,6 +83,7 @@ median(datos$PH_LABORATORIO, na.rm = TRUE) # mediana
 moda(datos$PH_LABORATORIO) # moda
 sd(datos$PH_LABORATORIO, na.rm = TRUE) # desv. estándar muestral
 meda(datos$PH_LABORATORIO) # MEDA
+mad(datos$PH_LABORATORIO, na.rm = TRUE) # desviación absoluta mediana
 skewness(na.omit(datos$PH_LABORATORIO)) # asimetría
 kurtosis(na.omit(datos$PH_LABORATORIO)) # curtosis
 max(datos$PH_LABORATORIO, na.rm = TRUE) - min(datos$PH_LABORATORIO, na.rm = TRUE) # rango
@@ -94,6 +96,7 @@ median(datos$TEMPERATUR, na.rm = TRUE)
 moda(datos$TEMPERATUR)
 sd(datos$TEMPERATUR, na.rm = TRUE)
 meda(datos$TEMPERATUR)
+mad(datos$TEMPERATUR, na.rm = TRUE) # desviación absoluta mediana
 skewness(na.omit(datos$TEMPERATUR))
 kurtosis(na.omit(datos$TEMPERATUR))
 max(datos$TEMPERATUR, na.rm = TRUE) - min(datos$TEMPERATUR, na.rm = TRUE)
@@ -106,6 +109,7 @@ median(datos$CONDUCTIVIDAD, na.rm = TRUE)
 moda(datos$CONDUCTIVIDAD)
 sd(datos$CONDUCTIVIDAD, na.rm = TRUE)
 meda(datos$CONDUCTIVIDAD)
+mad(datos$CONDUCTIVIDAD, na.rm = TRUE) # desviación absoluta mediana
 skewness(na.omit(datos$CONDUCTIVIDAD))
 kurtosis(na.omit(datos$CONDUCTIVIDAD))
 max(datos$CONDUCTIVIDAD, na.rm = TRUE) - min(datos$CONDUCTIVIDAD, na.rm = TRUE)
@@ -118,6 +122,7 @@ median(datos$CALCIO, na.rm = TRUE)
 moda(datos$CALCIO)
 sd(datos$CALCIO, na.rm = TRUE)
 meda(datos$CALCIO)
+mad(datos$CALCIO, na.rm = TRUE) # desviación absoluta mediana
 skewness(na.omit(datos$CALCIO))
 kurtosis(na.omit(datos$CALCIO))
 max(datos$CALCIO, na.rm = TRUE) - min(datos$CALCIO, na.rm = TRUE)
@@ -130,6 +135,7 @@ median(datos$SODIO, na.rm = TRUE)
 moda(datos$SODIO)
 sd(datos$SODIO, na.rm = TRUE)
 meda(datos$SODIO)
+mad(datos$SODIO, na.rm = TRUE) # desviación absoluta mediana
 skewness(na.omit(datos$SODIO))
 kurtosis(na.omit(datos$SODIO))
 max(datos$SODIO, na.rm = TRUE) - min(datos$SODIO, na.rm = TRUE)
@@ -264,32 +270,9 @@ p7 <- ggplot(datos, aes(x = TEMPERATUR)) +
 # Juntar los gráficos de ECDF de pH y Temperatura
 (p6 | p7)
 
-
-# ── DISPERSIÓN — 2 variables numéricas ────────────────────────
-# Dos numéricas → geom_point para ver si hay relación entre ellas
-
-p14 <- ggplot(datos, aes(x = TEMPERATUR, y = PH_LABORATORIO)) +
-    geom_point(alpha = 0.4, color = "steelblue") +
-    geom_smooth(method = "lm", color = "firebrick", se = FALSE) +
-    labs(
-        title = "¿El agua más caliente es más ácida?",
-        x = "Temperatura (°C)", y = "pH"
-    )
-
-p15 <- ggplot(datos, aes(x = SODIO, y = CONDUCTIVIDAD)) +
-    geom_point(alpha = 0.4, color = "darkorange") +
-    geom_smooth(method = "lm", color = "firebrick", se = FALSE) +
-    scale_x_log10() +
-    scale_y_log10() +
-    labs(
-        title = "Sodio vs Conductividad (escala log)",
-        x = "Sodio (mg/L)", y = "Conductividad (µS/cm)"
-    )
-
-# Juntar los gráficos de dispersión
-(p14 / p15)
-
-# ── BARRAS — 1 variable categórica ────────────────────────────
+# ======================
+# Diagramas de barras (1 variable)
+# ======================
 # Usamos las columnas LIMPIAS para que las variantes normalizadas se agrupen.
 
 p8 <- datos %>%
@@ -298,7 +281,10 @@ p8 <- datos %>%
     geom_bar() +
     guides(fill = "none") + # la leyenda es redundante con el eje
     coord_flip() +
-    labs(title = "Tipos de agua", x = NULL, y = "Cantidad de Manantiales")
+    labs(
+        title = "Clasificación de aguas en manantiales",
+        x = NULL, y = "Cantidad de Manantiales"
+    )
 
 p9 <- datos %>%
     filter(!is.na(OLOR_LIMPIO)) %>%
