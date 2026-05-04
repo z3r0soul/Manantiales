@@ -47,3 +47,9 @@ meda <- function(x) {
     x <- na.omit(x)
     median(abs(x - median(x)))
 }
+# ==============================================================
+# 4. COEFICIENTE DE VARIACION
+# ==============================================================
+calc_cv <- function(x) {
+  (sd(x, na.rm = TRUE) / mean(x, na.rm = TRUE)) * 100
+}
