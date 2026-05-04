@@ -23,6 +23,7 @@ if (!require("stringr")) install.packages("stringr")
 # Cargar librerías
 library(patchwork)
 library(here)
+library(scales)
 library(ggplot2)
 library(readr)
 library(moments)
@@ -33,8 +34,11 @@ library(stringr) # str_trim, str_squish, str_to_title
 # Carga de funciones personalizadas
 source(here("code", "funciones.r"))
 
+# =============================================================
+# 1. CARGA Y PREPARACIÓN DE DATOS
+# =============================================================
 
-# 1. Carga de datos desde el archivo CSV, identificando valores erróneos y faltantes como NA
+# Carga de datos desde el archivo CSV, identificando valores erróneos y faltantes como NA
 # El CSV tiene valores -999 que significan "dato faltante".
 # read_csv2 ya los convierte a NA gracias a na = c(..., "-999").
 
@@ -67,15 +71,50 @@ datos <- datos %>%
         OLOR_LIMPIO          = normalizar(OLOR)
     )
 
+# 4. Categorizar pH en tres grupos con significado geoquímico:
+# Ácido < 6.5 | Neutro 6.5–7.5 | Básico > 7.5
+# Justificación: el punto de corte 6.5/7.5 es el estándar OMS
+# para calidad del agua
+datos <- datos %>%
+  mutate(
+    PH_CAT = case_when(
+      PH_LABORATORIO < 6.5  ~ "Ácido",
+      PH_LABORATORIO <= 7.5 ~ "Neutro",
+      PH_LABORATORIO > 7.5  ~ "Básico",
+      TRUE ~ NA_character_
+    ),
+    PH_CAT = factor(PH_CAT, levels = c("Ácido", "Neutro", "Básico"))
+  )
+
+# 5. Temperatura categorizada
+# Al igual que PH_CAT, convertir temperatura continua
+# en categorías permite análisis bivariado y comunica mejor
+# el significado geotérmico que un histograma solo.
+# Umbrales: fría <20°C (agua superficial), tibia 20–50°C
+# (geotérmica baja), termal >50°C (geotérmica alta / fumarola).
+
+datos <- datos %>%
+  mutate(
+    TEMP_CAT = case_when(
+      TEMPERATUR < 20  ~ "Fría",
+      TEMPERATUR <= 50 ~ "Tibia",
+      TEMPERATUR > 50  ~ "Termal",
+      TRUE ~ NA_character_
+    ),
+    TEMP_CAT = factor(TEMP_CAT, levels = c("Fría", "Tibia", "Termal"))
+  )
+
 # Revisamos cuántas filas y columnas tenemos (Solo es un debuggeo)
 cat("Filas:", nrow(datos), "| Columnas:", ncol(datos), "\n")
 
-# ESTADÍSTICAS DESCRIPTIVAS
-# Para el objetivo #1
+# =============================================================
+# 2. ESTADÍSTICAS DESCRIPTIVAS
+# =============================================================
+# Se calculan: media, media recortada (5%), mediana, moda,
+# desviación estándar muestral y poblacional, varianza muestral,
+# MEDA, MAD, coeficiente de variación (CV), asimetría, curtosis y rango.
 
-# ── Ahora aplicamos todo a cada variable ──────────────────────
-
-# pH — va de 0 a 14. Mínimo de 0.0 es sospechoso, el rango lo revela.
+# pH — va de 0 a 14. Mínimo de 0.0 es sospechoso, el rango lo revela  .
 cat("── pH ──\n")
 mean(datos$PH_LABORATORIO, na.rm = TRUE) # media
 mean(datos$PH_LABORATORIO, na.rm = TRUE, trim = 0.05) # media recortada 5%
@@ -84,6 +123,7 @@ moda(datos$PH_LABORATORIO) # moda
 sd(datos$PH_LABORATORIO, na.rm = TRUE) # desv. estándar muestral
 meda(datos$PH_LABORATORIO) # MEDA
 mad(datos$PH_LABORATORIO, na.rm = TRUE) # desviación absoluta mediana
+calc_cv(datos$PH_LABORATORIO)
 skewness(na.omit(datos$PH_LABORATORIO)) # asimetría
 kurtosis(na.omit(datos$PH_LABORATORIO)) # curtosis
 max(datos$PH_LABORATORIO, na.rm = TRUE) - min(datos$PH_LABORATORIO, na.rm = TRUE) # rango
@@ -97,6 +137,7 @@ moda(datos$TEMPERATUR)
 sd(datos$TEMPERATUR, na.rm = TRUE)
 meda(datos$TEMPERATUR)
 mad(datos$TEMPERATUR, na.rm = TRUE) # desviación absoluta mediana
+calc_cv(datos$TEMPERATUR)
 skewness(na.omit(datos$TEMPERATUR))
 kurtosis(na.omit(datos$TEMPERATUR))
 max(datos$TEMPERATUR, na.rm = TRUE) - min(datos$TEMPERATUR, na.rm = TRUE)
@@ -110,6 +151,7 @@ moda(datos$CONDUCTIVIDAD)
 sd(datos$CONDUCTIVIDAD, na.rm = TRUE)
 meda(datos$CONDUCTIVIDAD)
 mad(datos$CONDUCTIVIDAD, na.rm = TRUE) # desviación absoluta mediana
+calc_cv(datos$CONDUCTIVIDAD)
 skewness(na.omit(datos$CONDUCTIVIDAD))
 kurtosis(na.omit(datos$CONDUCTIVIDAD))
 max(datos$CONDUCTIVIDAD, na.rm = TRUE) - min(datos$CONDUCTIVIDAD, na.rm = TRUE)
@@ -123,6 +165,7 @@ moda(datos$CALCIO)
 sd(datos$CALCIO, na.rm = TRUE)
 meda(datos$CALCIO)
 mad(datos$CALCIO, na.rm = TRUE) # desviación absoluta mediana
+calc_cv(datos$CALCIO)
 skewness(na.omit(datos$CALCIO))
 kurtosis(na.omit(datos$CALCIO))
 max(datos$CALCIO, na.rm = TRUE) - min(datos$CALCIO, na.rm = TRUE)
@@ -136,9 +179,103 @@ moda(datos$SODIO)
 sd(datos$SODIO, na.rm = TRUE)
 meda(datos$SODIO)
 mad(datos$SODIO, na.rm = TRUE) # desviación absoluta mediana
+calc_cv(datos$CONDUCTIVIDAD)
 skewness(na.omit(datos$SODIO))
 kurtosis(na.omit(datos$SODIO))
 max(datos$SODIO, na.rm = TRUE) - min(datos$SODIO, na.rm = TRUE)
+
+
+
+# =============================================================
+# TABLAS CRUZADAS BIVARIADAS
+# =============================================================
+
+# PH_CAT x TEMP_CAT (pH vs temperatura categóricas)
+# Justificación: si el agua termal tiende a ser más ácida,
+# se confirma la relación entre temperatura y acidez que
+# también muestra el gráfico de dispersión.
+
+datos_pt <- datos %>% filter(!is.na(PH_CAT), 
+                             !is.na(TEMP_CAT)
+                             )
+tabla_pt <- table(pH = datos_pt$PH_CAT, 
+                  Temperatura = datos_pt$TEMP_CAT
+                  )
+
+cat("\n══ PH_CAT × TEMP_CAT — frecuencias ABSOLUTAS ══\n")
+print(tabla_pt)
+
+cat("\n  Proporciones por FILA (% dentro de cada categoría de pH):\n")
+print(round(prop.table(tabla_pt, margin = 1) * 100, 1))
+
+cat("\n  Proporciones por COLUMNA (% dentro de cada categoría de temperatura):\n")
+print(round(prop.table(tabla_pt, margin = 2) * 100, 1))
+
+
+# Se reportan frecuencias absolutas y proporciones por fila y columna.
+# Por fila: qué % de cada tipo de agua tiene cada pH.
+# Por columna: qué % de cada categoría de pH corresponde a cada tipo.
+
+# Tabla cruzada: PH_CAT × CLASIFICACIÓN 
+# Justificación: permite ver si el tipo de agua está asociado
+# con la acidez del manantial. La Sulfatada debería tener más ácidos
+# por la oxidación de sulfuros; la Bicarbonatada, más neutros.
+top3 <- c("Bicarbonatada", "Clorurada", "Sulfatada")
+datos_top3 <- datos %>%
+  filter(CLASIFICACION_LIMPIA %in% top3, !is.na(PH_CAT))
+
+tabla_cruzada <- table(
+  pH          = datos_top3$PH_CAT,
+  Clasificacion = datos_top3$CLASIFICACION_LIMPIA
+)
+
+cat("\n══ Tabla cruzada: pH × Clasificación — frecuencias absolutas ══\n")
+print(tabla_cruzada)
+
+cat("\n  Proporciones por fila (% dentro de cada categoría de pH):\n")
+print(round(prop.table(tabla_cruzada, margin = 1) * 100, 1))
+
+cat("\n  Proporciones por columna (% dentro de cada tipo de agua):\n")
+print(round(prop.table(tabla_cruzada, margin = 2) * 100, 1))
+
+# ── Tabla cruzada: PH_CAT × OLOR ─────────────────────────────
+# Justificación: el H2S baja el pH — esperamos que "Ácido" tenga
+# mayor proporción de olor a H2S y "Fuerte" que los otros grupos.
+datos_olor <- datos %>% filter(!is.na(PH_CAT), !is.na(OLOR_LIMPIO))
+
+tabla_ph_olor <- table(
+  pH   = datos_olor$PH_CAT,
+  Olor = datos_olor$OLOR_LIMPIO
+)
+
+cat("\n══ Tabla cruzada: pH × Olor — frecuencias absolutas ══\n")
+print(tabla_ph_olor)
+
+cat("\n  Proporciones por fila (% dentro de cada categoría de pH):\n")
+print(round(prop.table(tabla_ph_olor, margin = 1) * 100, 1))
+
+cat("\n  Proporciones por columna (% dentro de cada olor):\n")
+print(round(prop.table(tabla_ph_olor, margin = 2) * 100, 1))
+
+# =============================================================
+# DIAGRAMA DE TALLO Y HOJAS
+# =============================================================
+# El diagrama de tallo y hojas muestra la distribución completa
+# de los datos sin perder valores individuales.
+# Se aplica a pH (escala 0–10) y temperatura (0–94°C).
+# Para pH se usa escala ×10 para mostrar un decimal.
+
+cat("\n══ Diagrama de tallo y hojas — pH (unidades enteras) ══\n")
+ph_clean <- datos$PH_LABORATORIO[!is.na(datos$PH_LABORATORIO) & datos$PH_LABORATORIO > 0]
+stem(ph_clean, scale = 2)
+
+cat("\n══ Diagrama de tallo y hojas — Temperatura ══\n")
+temp_clean <- datos$TEMPERATUR[!is.na(datos$TEMPERATUR) & datos$TEMPERATUR > 0]
+stem(temp_clean, scale = 1)
+
+# ========================
+# HISTOGRAMAS
+# ========================
 
 # GRÁFICO 1: HISTOGRAMA DE pH
 # (Objetivo 1)
@@ -270,54 +407,121 @@ p7 <- ggplot(datos, aes(x = TEMPERATUR)) +
 # Juntar los gráficos de ECDF de pH y Temperatura
 (p6 | p7)
 
-# ======================
-# Diagramas de barras (1 variable)
-# ======================
+# ==============================================
+# DIAGRAMAS DE BARRAS (1 variable)
+# ==============================================
 # Usamos las columnas LIMPIAS para que las variantes normalizadas se agrupen.
 
-p8 <- datos %>%
-    filter(!is.na(CLASIFICACION_LIMPIA)) %>%
-    ggplot(aes(x = CLASIFICACION_LIMPIA, fill = CLASIFICACION_LIMPIA)) +
-    geom_bar() +
-    guides(fill = "none") + # la leyenda es redundante con el eje
-    coord_flip() +
-    labs(
-        title = "Clasificación de aguas en manantiales",
-        x = NULL, y = "Cantidad de Manantiales"
-    )
+# Clasificacion del agua
+ggplot(datos %>% filter(!is.na(CLASIFICACION_LIMPIA)), aes(x = CLASIFICACION_LIMPIA, fill =  CLASIFICACION_LIMPIA)) +
+  geom_bar() +
+  guides(fill = "none") +
+  coord_flip() +
+  labs(
+    title = "Clasificacion del agua segun la cantidad de manantiales",
+    x = "Clasificacion del agua",
+    y = "Cantidad de manantiales"
+  )
 
-p9 <- datos %>%
-    filter(!is.na(OLOR_LIMPIO)) %>%
-    ggplot(aes(x = OLOR_LIMPIO, fill = OLOR_LIMPIO)) +
-    geom_bar() +
-    guides(fill = "none") +
-    coord_flip() +
-    labs(title = "Olor del agua", x = NULL, y = "Cantidad de Manantiales")
+# pH categorizado — nueva variable derivada
+# Justificación: PH_CAT convierte el pH continuo en tres grupos
+# geoquímicamente significativos y permite comparaciones directas
+# con variables categóricas como Clasificación.
+ggplot(datos %>% filter(!is.na(PH_CAT)), aes(x = PH_CAT, fill = PH_CAT)) +
+  geom_bar() +
+  scale_fill_manual(values = c("Ácido" = "#d73027",
+                               "Neutro" = "#fee08b",
+                               "Básico" = "#1a9850")) +
+  guides(fill = "none") +
+  geom_text(stat = "count", aes(label = after_stat(count)),
+            vjust = -0.5, size = 4) +
+  labs(title = "Categorías de pH en manantiales colombianos",
+       subtitle = "Ácido < 6.5  |  Neutro 6.5–7.5  |  Básico > 7.5  (n = 320)",
+       x = "Categoría de pH", y = "Número de manantiales")
 
+# Grafico de olor por cantidad de manantiales
+ggplot (datos %>% filter(!is.na(OLOR_LIMPIO)), aes( x = OLOR_LIMPIO, fill = OLOR_LIMPIO)) + 
+  geom_bar() +
+  guides(fill = "none") +
+  labs(
+    title = "Olor del agua en la cantidad de manantiales",
+    x = "Tipo de Olor",
+    y = "Cantidad de manantiales"
+  )
+
+# Grafico de mediciones por anio
 p10 <- ggplot(datos, aes(x = ANIO)) +
     geom_bar(fill = "#00a81e") +
     coord_flip() +
     labs(title = "Mediciones por año", x = NULL, y = "Cantidad de Manantiales")
 
+# Grafico de temperatura categorizada
+ggplot(datos %>% filter(!is.na(TEMP_CAT)), aes(x = TEMP_CAT, fill = TEMP_CAT)) +
+  geom_bar() +
+  scale_fill_manual(values = c("Fría"   = "#4393c3",
+                               "Tibia"  = "#f4a582",
+                               "Termal" = "#d6604d")) +
+  guides(fill = "none") +
+  geom_text(stat = "count", aes(label = after_stat(count)),
+            vjust = -0.5, size = 4) +
+  labs(title = "Categorías de temperatura en manantiales colombianos",
+       subtitle = "Fría <20°C  |  Tibia 20–50°C  |  Termal >50°C  (n = 320)",
+       x = "Categoría de temperatura", y = "Número de manantiales")
 
-# ── BARRAS — 2 variables categóricas ──────────────────────────
-# fill = segunda variable  →  barras lado a lado con position = "dodge"
-p11 <- datos %>%
-    filter(!is.na(CLASIFICACION_LIMPIA), !is.na(OLOR_LIMPIO)) %>%
-    ggplot(aes(x = CLASIFICACION_LIMPIA, fill = OLOR_LIMPIO)) +
-    geom_bar(position = "fill") +
-    scale_y_continuous(labels = scales::percent) +
-    coord_flip() +
-    labs(
-        title = "Proporción de olor según el tipo de agua",
-        subtitle = "Cada barra representa el 100%
-        de los manantiales de ese tipo",
-        x = NULL,
-        y = "Proporción",
-        fill = "Olor"
-    )
 
-(p8 | p9) / (p10 | p11)
+
+# =============================================================
+# DIAGRAMAS DE BARRAS — 2 VARIABLES
+# =============================================================
+
+#Diagrama de pH vs Temperatura
+datos %>%
+  filter(!is.na(PH_CAT), !is.na(TEMP_CAT)) %>%
+  ggplot(aes(x = TEMP_CAT, fill = PH_CAT)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = percent) +
+  scale_fill_manual(values = c("Ácido"  = "#d73027",
+                               "Neutro" = "#fee08b",
+                               "Básico" = "#1a9850")) +
+  labs(title = "Categoría de pH según temperatura del agua",
+       subtitle = "Cada barra = 100% de los manantiales de esa temperatura",
+       x = "Temperatura", y = "Proporción", fill = "pH")
+
+# PH_CAT x CLASIFICACIÓN 
+# Este gráfico responde: ¿el tipo de agua está asociado con la acidez?
+# Solo top 3 clasificaciones para legibilidad.
+datos %>%
+  filter(CLASIFICACION_LIMPIA %in% top3, !is.na(PH_CAT)) %>%
+  ggplot(aes(x = CLASIFICACION_LIMPIA, fill = PH_CAT)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = percent) +
+  scale_fill_manual(values = c("Ácido"  = "#d73027",
+                               "Neutro" = "#fee08b",
+                               "Básico" = "#1a9850")) +
+  labs(title = "Categoría de pH según tipo de agua",
+       subtitle = "Cada barra = 100% de los manantiales de ese tipo",
+       x = NULL, y = "Proporción", fill = "Categoría pH")
+# RESULTADO ESPERADO: Sulfatada debería tener mayor proporción de
+# Ácido porque sus aguas provienen de oxidación de sulfuros.
+# Bicarbonatada debería mostrar más Neutro/Básico.
+
+# PH_CAT x OLOR 
+# Justificación: el H2S disuelto reduce el pH.
+# Si los manantiales con olor a H2S tienen más categoría Ácido,
+# se confirma la relación entre origen volcánico y acidez.
+datos %>%
+  filter(!is.na(PH_CAT), !is.na(OLOR_LIMPIO)) %>%
+  ggplot(aes(x = OLOR_LIMPIO, fill = PH_CAT)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = percent) +
+  scale_fill_manual(values = c("Ácido"  = "#d73027",
+                               "Neutro" = "#fee08b",
+                               "Básico" = "#1a9850")) +
+  coord_flip() +
+  labs(title = "Categoría de pH según olor del agua",
+       subtitle = "Cada barra = 100% de los manantiales con ese olor",
+       x = NULL, y = "Proporción", fill = "Categoría pH")
+
 
 
 # ── GRÁFICO DE PASTEL ──────────────────────────────────────────
