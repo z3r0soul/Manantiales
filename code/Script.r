@@ -140,7 +140,6 @@ mad(datos$TEMPERATUR, na.rm = TRUE) # desviación absoluta mediana
 calc_cv(datos$TEMPERATUR)
 skewness(na.omit(datos$TEMPERATUR))
 kurtosis(na.omit(datos$TEMPERATUR))
-kurtosis(na.omit(datos$TEMPERATUR), type = 2)
 max(datos$TEMPERATUR, na.rm = TRUE) - min(datos$TEMPERATUR, na.rm = TRUE)
 
 # Conductividad — rango enorme (0 a 278,000): media recortada muy útil aquí
