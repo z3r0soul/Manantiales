@@ -140,6 +140,7 @@ mad(datos$TEMPERATUR, na.rm = TRUE) # desviación absoluta mediana
 calc_cv(datos$TEMPERATUR)
 skewness(na.omit(datos$TEMPERATUR))
 kurtosis(na.omit(datos$TEMPERATUR))
+kurtosis(na.omit(datos$TEMPERATUR), type = 2)
 max(datos$TEMPERATUR, na.rm = TRUE) - min(datos$TEMPERATUR, na.rm = TRUE)
 
 # Conductividad — rango enorme (0 a 278,000): media recortada muy útil aquí
@@ -183,6 +184,97 @@ calc_cv(datos$CONDUCTIVIDAD)
 skewness(na.omit(datos$SODIO))
 kurtosis(na.omit(datos$SODIO))
 max(datos$SODIO, na.rm = TRUE) - min(datos$SODIO, na.rm = TRUE)
+
+# ==============================================================
+# DIAGRAMAS DE TALLO Y HOJA
+# ==============================================================
+
+# pH — escala = 2 para mostrar un decimal de resolución
+cat("\n══ Tallo y hoja: pH (valores > 0) ══\n")
+ph_limpio <- datos$PH_LABORATORIO[
+  !is.na(datos$PH_LABORATORIO) & datos$PH_LABORATORIO > 0
+]
+stem(ph_limpio, scale = 2)
+
+# Temperatura — scale = 1 agrupa en decenas
+cat("\n══ Tallo y hoja: Temperatura (valores > 0) ══\n")
+temp_limpia <- datos$TEMPERATUR[
+  !is.na(datos$TEMPERATUR) & datos$TEMPERATUR > 0
+]
+stem(temp_limpia, scale = 1)
+
+# =============================================================================
+# TABLAS DE FRECUENCIAS — UNA SOLA VARIABLE CATEGÓRICA
+# Variables: CLASIFICACION_LIMPIA, OLOR_LIMPIO, PH_CAT, TEMP_CAT
+# =============================================================================
+
+
+# CLASIFICACIÓN QUÍMICA DEL AGUA (CLASIFICACION_LIMPIA)
+
+datos_clasif <- datos %>% filter(!is.na(CLASIFICACION_LIMPIA))
+
+tabla_clasif <- table(Clasificacion = datos_clasif$CLASIFICACION_LIMPIA)
+
+cat("\n══ CLASIFICACION_LIMPIA — frecuencias ABSOLUTAS ══\n")
+print(tabla_clasif)
+
+cat("\n  Frecuencias RELATIVAS (% del total de manantiales):\n")
+print(round(prop.table(tabla_clasif) * 100, 1))
+
+
+# ── 2. OLOR DEL AGUA (OLOR_LIMPIO) ───────────────────────────────────────────
+# Justificación: describir qué tan frecuente es cada tipo de olor.
+# Se espera que "Ausente" domine, pero los olores intensos (Fuerte, H2S)
+# son geoquímicamente relevantes porque indican presencia de gases
+# volcánicos disueltos como H2S y CO2.
+
+datos_olor <- datos %>% filter(!is.na(OLOR_LIMPIO))
+
+tabla_olor <- table(Olor = datos_olor$OLOR_LIMPIO)
+
+cat("\n══ OLOR_LIMPIO — frecuencias ABSOLUTAS ══\n")
+print(tabla_olor)
+
+cat("\n  Frecuencias RELATIVAS (% del total de manantiales):\n")
+print(round(prop.table(tabla_olor) * 100, 1))
+
+
+# ── 3. CATEGORÍA DE pH (PH_CAT) ──────────────────────────────────────────────
+# Justificación: resumir la distribución del pH continuo en tres grupos
+# con significado geoquímico claro.
+# Umbrales OMS: Ácido < 6.5 | Neutro 6.5–7.5 | Básico > 7.5
+# Se espera que la mayoría sea ácida, consistente con la mediana
+# de pH = 6.51 reportada en las estadísticas descriptivas.
+
+datos_ph <- datos %>% filter(!is.na(PH_CAT))
+
+tabla_ph <- table(pH = datos_ph$PH_CAT)
+
+cat("\n══ PH_CAT — frecuencias ABSOLUTAS ══\n")
+print(tabla_ph)
+
+cat("\n  Frecuencias RELATIVAS (% del total de manantiales):\n")
+print(round(prop.table(tabla_ph) * 100, 1))
+
+
+# ── 4. CATEGORÍA DE TEMPERATURA (TEMP_CAT) ───────────────────────────────────
+# Justificación: resumir la distribución de la temperatura continua
+# en tres grupos con significado hidrogeológico.
+# Umbrales: Fría < 20°C | Tibia 20–50°C | Termal > 50°C
+# Se espera que la mayoría sea tibia o termal, confirmando que el
+# dataset está dominado por sistemas geotérmicos activos, coherente
+# con la actividad volcánica y tectónica del territorio colombiano.
+
+datos_temp <- datos %>% filter(!is.na(TEMP_CAT))
+
+tabla_temp <- table(Temperatura = datos_temp$TEMP_CAT)
+
+cat("\n══ TEMP_CAT — frecuencias ABSOLUTAS ══\n")
+print(tabla_temp)
+
+cat("\n  Frecuencias RELATIVAS (% del total de manantiales):\n")
+print(round(prop.table(tabla_temp) * 100, 1))
+
 
 
 
@@ -360,7 +452,7 @@ p4 <- ggplot(datos, aes(x = SODIO)) +
 
 # GRAFICO 3.2: HISTOGRAMA DE LAS CONCENTRACIONES DE CALCIO
 p5 <- ggplot(datos, aes(x = CALCIO)) +
-    geom_histogram(bins = 9, fill = "#a82339", color = "white") + # escala logarítmica en el eje X
+    geom_histogram(bins = 9, fill = "#a82339", color = "white") +
     labs(
         x = "Concentración de calcio (mg/L)",
         y = "Número de manantiales"
@@ -423,6 +515,16 @@ ggplot(datos %>% filter(!is.na(CLASIFICACION_LIMPIA)), aes(x = CLASIFICACION_LIM
     y = "Cantidad de manantiales"
   )
 
+# Grafico de olor por cantidad de manantiales
+ggplot (datos %>% filter(!is.na(OLOR_LIMPIO)), aes( x = OLOR_LIMPIO, fill = OLOR_LIMPIO)) + 
+  geom_bar() +
+  guides(fill = "none") +
+  labs(
+    title = "Olor del agua en la cantidad de manantiales",
+    x = "Tipo de Olor",
+    y = "Cantidad de manantiales"
+  )
+
 # pH categorizado — nueva variable derivada
 # Justificación: PH_CAT convierte el pH continuo en tres grupos
 # geoquímicamente significativos y permite comparaciones directas
@@ -439,22 +541,6 @@ ggplot(datos %>% filter(!is.na(PH_CAT)), aes(x = PH_CAT, fill = PH_CAT)) +
        subtitle = "Ácido < 6.5  |  Neutro 6.5–7.5  |  Básico > 7.5  (n = 320)",
        x = "Categoría de pH", y = "Número de manantiales")
 
-# Grafico de olor por cantidad de manantiales
-ggplot (datos %>% filter(!is.na(OLOR_LIMPIO)), aes( x = OLOR_LIMPIO, fill = OLOR_LIMPIO)) + 
-  geom_bar() +
-  guides(fill = "none") +
-  labs(
-    title = "Olor del agua en la cantidad de manantiales",
-    x = "Tipo de Olor",
-    y = "Cantidad de manantiales"
-  )
-
-# Grafico de mediciones por anio
-p10 <- ggplot(datos, aes(x = ANIO)) +
-    geom_bar(fill = "#00a81e") +
-    coord_flip() +
-    labs(title = "Mediciones por año", x = NULL, y = "Cantidad de Manantiales")
-
 # Grafico de temperatura categorizada
 ggplot(datos %>% filter(!is.na(TEMP_CAT)), aes(x = TEMP_CAT, fill = TEMP_CAT)) +
   geom_bar() +
@@ -468,6 +554,13 @@ ggplot(datos %>% filter(!is.na(TEMP_CAT)), aes(x = TEMP_CAT, fill = TEMP_CAT)) +
        subtitle = "Fría <20°C  |  Tibia 20–50°C  |  Termal >50°C  (n = 320)",
        x = "Categoría de temperatura", y = "Número de manantiales")
 
+# Grafico de mediciones por anio
+p10 <- ggplot(datos, aes(x = ANIO)) +
+    geom_bar(fill = "#00a81e") +
+    coord_flip() +
+    labs(title = "Mediciones por año", x = NULL, y = "Cantidad de Manantiales")
+
+
 
 
 # =============================================================
@@ -479,7 +572,6 @@ datos %>%
   filter(!is.na(PH_CAT), !is.na(TEMP_CAT)) %>%
   ggplot(aes(x = TEMP_CAT, fill = PH_CAT)) +
   geom_bar(position = "fill") +
-  scale_y_continuous(labels = percent) +
   scale_fill_manual(values = c("Ácido"  = "#d73027",
                                "Neutro" = "#fee08b",
                                "Básico" = "#1a9850")) +
@@ -521,6 +613,34 @@ datos %>%
   labs(title = "Categoría de pH según olor del agua",
        subtitle = "Cada barra = 100% de los manantiales con ese olor",
        x = NULL, y = "Proporción", fill = "Categoría pH")
+
+#Grafica OLOR VS CLASIFICACION
+#Esta grafica permite afirmar que l
+  colores_olor <- c(
+  "Fuerte"   = "#d73027",
+  "H2s"      = "#fc8d59",
+  "Leve"     = "#fee090",
+  "Moderado" = "#91bfdb",
+  "Otro"     = "#4575b4"
+  )
+  datos %>%
+    filter(
+      CLASIFICACION_LIMPIA %in% top3,
+      !is.na(OLOR_LIMPIO),
+      OLOR_LIMPIO != "Ausente"        # excluir olor ausente
+    ) %>%
+    ggplot(aes(x = CLASIFICACION_LIMPIA, fill = OLOR_LIMPIO)) +
+    geom_bar(position = "fill") +
+    scale_y_continuous(labels = percent) +
+    scale_fill_manual(values = colores_olor) +
+    labs(
+      title    = "Tipo de olor según clasificación química del agua",
+      subtitle = "Solo manantiales con olor detectable (olor ausente excluido) | Top 3 clasificaciones",
+      x        = "Clasificación química",
+      y        = "Proporción de manantiales con olor",
+      fill     = "Tipo de olor"
+    ) +
+    theme_minimal()
 
 
 
