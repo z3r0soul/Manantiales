@@ -154,7 +154,9 @@ meda(datos$CONDUCTIVIDAD)
 mad(datos$CONDUCTIVIDAD, na.rm = TRUE) # desviación absoluta mediana
 calc_cv(datos$CONDUCTIVIDAD)
 skewness(na.omit(datos$CONDUCTIVIDAD))
+asimetria_bowley(na.omit(datos$CONDUCTIVIDAD))
 kurtosis(na.omit(datos$CONDUCTIVIDAD))
+curtosis_moors(na.omit(datos$CONDUCTIVIDAD))
 max(datos$CONDUCTIVIDAD, na.rm = TRUE) - min(datos$CONDUCTIVIDAD, na.rm = TRUE)
 
 # Calcio
@@ -660,3 +662,4 @@ clasif_tabla <- table(datos$CLASIFICACION_LIMPIA)
 clasif_pct <- round(prop.table(clasif_tabla) * 100, 1)
 clasif_labels <- paste0(names(clasif_tabla), "\n", clasif_pct, "%")
 pie(clasif_tabla, labels = clasif_labels, main = "Proporción de tipos de agua")
+

@@ -53,3 +53,44 @@ meda <- function(x) {
 calc_cv <- function(x) {
   (sd(x, na.rm = TRUE) / mean(x, na.rm = TRUE)) * 100
 } 
+
+# ==============================================================
+# ASIMETRIA DE BOWLEY
+# ==============================================================
+# Fórmula: B = (Q3 + Q1 - 2*Q2) / (Q3 - Q1)
+# Rango: siempre entre -1 y +1.
+# Interpretación:
+#   B > 0  cola derecha (igual que Fisher positivo)
+#   B < 0  cola izquierda
+#   B = 0  simétrico respecto a los cuartiles
+# Ventaja: solo usa Q1, Q2, Q3  inmune a valores extremos..
+
+asimetria_bowley <- function(x) {
+  x <- na.omit(x)
+  q <- quantile(x, probs = c(0.25, 0.50, 0.75))
+  Q1 <- q[1]; Q2 <- q[2]; Q3 <- q[3]
+  # Si el rango intercuartílico es 0, la fórmula no está definida
+  if ((Q3 - Q1) == 0) return(NA_real_)
+  (Q3 + Q1 - 2 * Q2) / (Q3 - Q1)
+}
+# ==============================================================
+# CURTOSIS DE MOORS
+# ==============================================================
+
+# Fórmula: M = (E7 - E5 + E3 - E1) / (E6 - E2)
+# donde E1..E8 son los octiles (cuantiles de orden 1/8, 2/8, ..., 7/8).
+# Rango: valores > 0 indican colas más pesadas que una distribución
+#   con referencia uniforme en los cuartiles.
+# Interpretación:
+#   M alto  distribución con colas pesadas (leptocúrtica en sentido cuantílico)
+#   Referencia: para una distribución normal, M ≈ 1.23
+# Ventaja: solo usa cuantiles → inmune a valores extremos.
+
+curtosis_moors <- function(x) {
+  x <- na.omit(x)
+  e <- quantile(x, probs = c(1/8, 2/8, 3/8, 5/8, 6/8, 7/8))
+  # e[1]=E1, e[2]=E2, e[3]=E3, e[4]=E5, e[5]=E6, e[6]=E7
+  denominador <- e[5] - e[2]   # E6 - E2
+  if (denominador == 0) return(NA_real_)
+  (e[6] - e[4] + e[3] - e[1]) / denominador
+}
