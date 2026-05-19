@@ -187,7 +187,7 @@ kurtosis(na.omit(datos$SODIO))
 max(datos$SODIO, na.rm = TRUE) - min(datos$SODIO, na.rm = TRUE)
 
 # ==============================================================
-# DIAGRAMAS DE TALLO Y HOJA
+# 1. DIAGRAMAS DE TALLO Y HOJA
 # ==============================================================
 
 # pH — escala = 2 para mostrar un decimal de resolución
@@ -205,7 +205,7 @@ temp_limpia <- datos$TEMPERATUR[
 stem(temp_limpia, scale = 1)
 
 # =============================================================================
-# TABLAS DE FRECUENCIAS — UNA SOLA VARIABLE CATEGÓRICA
+# 2. TABLAS DE FRECUENCIAS — UNA SOLA VARIABLE CATEGÓRICA
 # Variables: CLASIFICACION_LIMPIA, OLOR_LIMPIO, PH_CAT, TEMP_CAT
 # =============================================================================
 
@@ -223,7 +223,7 @@ cat("\n  Frecuencias RELATIVAS (% del total de manantiales):\n")
 print(round(prop.table(tabla_clasif) * 100, 1))
 
 
-# ── 2. OLOR DEL AGUA (OLOR_LIMPIO) ───────────────────────────────────────────
+# ── OLOR DEL AGUA (OLOR_LIMPIO) ───────────────────────────────────────────
 # Justificación: describir qué tan frecuente es cada tipo de olor.
 # Se espera que "Ausente" domine, pero los olores intensos (Fuerte, H2S)
 # son geoquímicamente relevantes porque indican presencia de gases
@@ -280,7 +280,7 @@ print(round(prop.table(tabla_temp) * 100, 1))
 
 
 # =============================================================
-# TABLAS CRUZADAS BIVARIADAS
+# 3. TABLAS CRUZADAS BIVARIADAS
 # =============================================================
 
 # PH_CAT x TEMP_CAT (pH vs temperatura categóricas)
@@ -351,7 +351,7 @@ cat("\n  Proporciones por columna (% dentro de cada olor):\n")
 print(round(prop.table(tabla_ph_olor, margin = 2) * 100, 1))
 
 # =============================================================
-# DIAGRAMA DE TALLO Y HOJAS
+# 4. DIAGRAMA DE TALLO Y HOJAS
 # =============================================================
 # El diagrama de tallo y hojas muestra la distribución completa
 # de los datos sin perder valores individuales.
@@ -367,10 +367,10 @@ temp_clean <- datos$TEMPERATUR[!is.na(datos$TEMPERATUR) & datos$TEMPERATUR > 0]
 stem(temp_clean, scale = 1)
 
 # ========================
-# HISTOGRAMAS
+# 5. HISTOGRAMAS
 # ========================
 
-# GRÁFICO 1: HISTOGRAMA DE pH
+# GRÁFICO 5.1: HISTOGRAMA DE pH
 # (Objetivo 1)
 # POR QUÉ ESTE GRÁFICO: El pH es numérica continua → histograma.
 # Queremos ver si los manantiales son mayormente ácidos, neutros o básicos.
@@ -397,7 +397,7 @@ p1 <- ggplot(datos, aes(x = PH_LABORATORIO)) +
 # arrastran la media hacia abajo.
 
 
-# GRÁFICO 2: HISTOGRAMA DE TEMPERATURA
+# GRÁFICO 5.2: HISTOGRAMA DE TEMPERATURA
 # (Objetivo 1)
 # POR QUÉ ESTE GRÁFICO: Temperatura es numérica continua → histograma.
 # Nos permite clasificar si el agua es fría (<20°C) o termal (>20°C).
@@ -422,7 +422,7 @@ p2 <- ggplot(datos, aes(x = TEMPERATUR)) +
 # La cola a la derecha (valores >80°C) explica que la media supere a la mediana.
 
 
-# GRÁFICO 3: HISTOGRAMA DE CONDUCTIVIDAD
+# GRÁFICO 5.3: HISTOGRAMA DE CONDUCTIVIDAD
 # (Objetivo 1)
 # POR QUÉ ESTE GRÁFICO: Conductividad es numérica continua → histograma.
 # Usamos escala logarítmica porque el rango es enorme (0 a 278,000 µS/cm).
@@ -440,7 +440,7 @@ p3 <- ggplot(datos, aes(x = CONDUCTIVIDAD)) +
 # CONCLUSIÓN: La mayoría de manantiales tiene conductividad entre 100 y 10,000 µS/cm.
 # Unos pocos superan los 100,000, indicando agua muy salina (probablemente fumarolas).
 
-# GRAFICO 3.1: HISTOGRAMA DE LAS CONCENTRACIONES DE SODIO
+# GRAFICO 5.4: HISTOGRAMA DE LAS CONCENTRACIONES DE SODIO
 p4 <- ggplot(datos, aes(x = SODIO)) +
     geom_histogram(bins = 9, fill = "#a82339", color = "white") +
     scale_x_log10() + # escala logarítmica en el eje X
@@ -451,7 +451,7 @@ p4 <- ggplot(datos, aes(x = SODIO)) +
         y = "Número de manantiales"
     )
 
-# GRAFICO 3.2: HISTOGRAMA DE LAS CONCENTRACIONES DE CALCIO
+# GRAFICO 5.5: HISTOGRAMA DE LAS CONCENTRACIONES DE CALCIO
 p5 <- ggplot(datos, aes(x = CALCIO)) +
     geom_histogram(bins = 9, fill = "#a82339", color = "white") +
     labs(
@@ -463,7 +463,7 @@ p5 <- ggplot(datos, aes(x = CALCIO)) +
 (p1 | p2) / (p3 | p4 | p5)
 
 
-# GRÁFICO 4: DISTRIBUCIÓN ACUMULADA (ECDF) — pH
+# GRÁFICO PROVISIONAL 1: DISTRIBUCIÓN ACUMULADA (ECDF) — pH
 # (Objetivo 1)
 # POR QUÉ ESTE GRÁFICO: El ECDF para pH nos permite afirmar cosas concretas.
 # Por ejemplo: "el X% de los manantiales tiene pH menor a 7 (son ácidos)".
@@ -482,7 +482,7 @@ p6 <- ggplot(datos, aes(x = PH_LABORATORIO)) +
 # entonces el 75% de los manantiales son ácidos.
 
 
-# GRÁFICO 5: DISTRIBUCIÓN ACUMULADA — Temperatura
+# GRÁFICO PROVISIONAL 2: DISTRIBUCIÓN ACUMULADA — Temperatura
 # (Objetivo 1)
 # POR QUÉ ESTE GRÁFICO: Permite afirmar qué porcentaje del agua
 # supera los 50°C (umbral de agua termal de alta temperatura).
@@ -501,11 +501,11 @@ p7 <- ggplot(datos, aes(x = TEMPERATUR)) +
 (p6 | p7)
 
 # ==============================================
-# DIAGRAMAS DE BARRAS (1 variable)
+# 6. DIAGRAMAS DE BARRAS (1 variable)
 # ==============================================
 # Usamos las columnas LIMPIAS para que las variantes normalizadas se agrupen.
 
-# Clasificacion del agua
+# 6.1 Clasificacion del agua
 ggplot(datos %>% filter(!is.na(CLASIFICACION_LIMPIA)), aes(x = CLASIFICACION_LIMPIA, fill =  CLASIFICACION_LIMPIA)) +
   geom_bar() +
   guides(fill = "none") +
@@ -516,7 +516,7 @@ ggplot(datos %>% filter(!is.na(CLASIFICACION_LIMPIA)), aes(x = CLASIFICACION_LIM
     y = "Cantidad de manantiales"
   )
 
-# Grafico de olor por cantidad de manantiales
+# 6.2 Grafico de olor por cantidad de manantiales
 ggplot (datos %>% filter(!is.na(OLOR_LIMPIO)), aes( x = OLOR_LIMPIO, fill = OLOR_LIMPIO)) + 
   geom_bar() +
   guides(fill = "none") +
@@ -526,7 +526,7 @@ ggplot (datos %>% filter(!is.na(OLOR_LIMPIO)), aes( x = OLOR_LIMPIO, fill = OLOR
     y = "Cantidad de manantiales"
   )
 
-# pH categorizado — nueva variable derivada
+# 6.3 pH categorizado — nueva variable derivada
 # Justificación: PH_CAT convierte el pH continuo en tres grupos
 # geoquímicamente significativos y permite comparaciones directas
 # con variables categóricas como Clasificación.
@@ -542,7 +542,7 @@ ggplot(datos %>% filter(!is.na(PH_CAT)), aes(x = PH_CAT, fill = PH_CAT)) +
        subtitle = "Ácido < 6.5  |  Neutro 6.5–7.5  |  Básico > 7.5  (n = 320)",
        x = "Categoría de pH", y = "Número de manantiales")
 
-# Grafico de temperatura categorizada
+# 6.4  Grafico de temperatura categorizada
 ggplot(datos %>% filter(!is.na(TEMP_CAT)), aes(x = TEMP_CAT, fill = TEMP_CAT)) +
   geom_bar() +
   scale_fill_manual(values = c("Fría"   = "#4393c3",
@@ -555,7 +555,7 @@ ggplot(datos %>% filter(!is.na(TEMP_CAT)), aes(x = TEMP_CAT, fill = TEMP_CAT)) +
        subtitle = "Fría <20°C  |  Tibia 20–50°C  |  Termal >50°C  (n = 320)",
        x = "Categoría de temperatura", y = "Número de manantiales")
 
-# Grafico de mediciones por anio
+# 6.5 Grafico de mediciones por anio
 p10 <- ggplot(datos, aes(x = ANIO)) +
     geom_bar(fill = "#00a81e") +
     coord_flip() +
@@ -565,10 +565,10 @@ p10 <- ggplot(datos, aes(x = ANIO)) +
 
 
 # =============================================================
-# DIAGRAMAS DE BARRAS — 2 VARIABLES
+# 7. DIAGRAMAS DE BARRAS — 2 VARIABLES
 # =============================================================
 
-#Diagrama de pH vs Temperatura
+# 7.1 Diagrama de pH vs Temperatura
 datos %>%
   filter(!is.na(PH_CAT), !is.na(TEMP_CAT)) %>%
   ggplot(aes(x = TEMP_CAT, fill = PH_CAT)) +
@@ -580,7 +580,7 @@ datos %>%
        subtitle = "Cada barra = 100% de los manantiales de esa temperatura",
        x = "Temperatura", y = "Proporción", fill = "pH")
 
-# PH_CAT x CLASIFICACIÓN 
+# 7.2 PH_CAT x CLASIFICACIÓN 
 # Este gráfico responde: ¿el tipo de agua está asociado con la acidez?
 # Solo top 3 clasificaciones para legibilidad.
 datos %>%
@@ -598,7 +598,7 @@ datos %>%
 # Ácido porque sus aguas provienen de oxidación de sulfuros.
 # Bicarbonatada debería mostrar más Neutro/Básico.
 
-# PH_CAT x OLOR 
+# 7.3 PH_CAT x OLOR 
 # Justificación: el H2S disuelto reduce el pH.
 # Si los manantiales con olor a H2S tienen más categoría Ácido,
 # se confirma la relación entre origen volcánico y acidez.
@@ -615,7 +615,7 @@ datos %>%
        subtitle = "Cada barra = 100% de los manantiales con ese olor",
        x = NULL, y = "Proporción", fill = "Categoría pH")
 
-# Grafica OLOR VS CLASIFICACION
+# 7.4 Grafica OLOR VS CLASIFICACION
 # Esta grafica permite afirmar que l
   colores_olor <- c(
   "Fuerte"   = "#d73027",
@@ -645,7 +645,7 @@ datos %>%
 
 
 #=============================================================
-# GRÁFICO DE PASTEL
+# 8. GRÁFICO DE PASTEL
 # =============================================================
   
 # NA no es categoría real: se filtra ANTES de pasar a ggplot.
@@ -664,15 +664,15 @@ clasif_labels <- paste0(names(clasif_tabla), "\n", clasif_pct, "%")
 pie(clasif_tabla, labels = clasif_labels, main = "Proporción de tipos de agua")
 
 # =============================================================
-# DIAGRAMA DE CAJA Y BIGOTES
+# 9. DIAGRAMAS DE CAJA Y BIGOTES
 # =============================================================
 
-# Box plot provisional para practicar
+# 9.1 Box plot provisional para practicar
 # Variable: pH del agua
 datos %>%
   filter(!is.na(CLASIFICACION_LIMPIA),
-         !is.na(PH_LABORATORIO),
-         CLASIFICACION_LIMPIA != "Mixta / Compuesta") %>%
+         !is.na(PH_LABORATORIO)
+         ) %>%
   ggplot(aes(x    = CLASIFICACION_LIMPIA,
              y    = PH_LABORATORIO,
              fill = CLASIFICACION_LIMPIA)) +
@@ -684,3 +684,97 @@ datos %>%
     y     = "pH (laboratorio)"
   ) +
   theme_minimal()
+
+# 9.2 Box Plot TEMPERATUR vs CLASIFICACION_LIMPIA
+# Vemos de las temperatura mayores a 0 y que no son mixtas ni compuestas: 
+# (Bicarbonatada / Clorurada / Sulfatada)
+
+datos %>%
+  filter(!is.na(CLASIFICACION_LIMPIA),
+         !is.na(TEMPERATUR),
+         TEMPERATUR > 0,
+         CLASIFICACION_LIMPIA %in% top3
+         ) %>%
+  ggplot(aes(x    = CLASIFICACION_LIMPIA,
+             y    = TEMPERATUR,
+             fill = CLASIFICACION_LIMPIA)) +
+  geom_boxplot() +
+  guides(fill = "none") +
+  labs(
+    title = "Distribución de temperatura por tipo de agua",
+    x     = NULL,
+    y     = "Temperatura (°C)"
+  ) +
+  theme_minimal()
+
+# =============================================================
+# 10 ANÁLISIS DE DOS VARIABLES NUMÉRICAS
+# =============================================================
+
+# 10.1 Diagrama de dispersión para ver la correlación entre el sodio
+# y la conductividad
+
+datos %>% 
+  filter ( !is.na(SODIO),
+                   !is.na(CONDUCTIVIDAD)
+           ) %>%
+ggplot ( aes (x = SODIO, y = CONDUCTIVIDAD)
+         ) +
+  geom_point( size = 1
+              ) +
+  geom_smooth(method = "lm", 
+              se = FALSE,
+              color = "red") +
+  labs( title = "Diagrama de dispersion del Sodio y la Conductividad",
+        subtitle = "Correlacion entre variables con el coeficiente lineal de Pearson",
+        x = "Sodio",
+        y = "Conductividad"
+  )
+
+# 10.2 Diagrama de dispersión para ver la correlación entre el calcio
+# y la conductividad
+
+datos %>% 
+  filter ( !is.na(CALCIO),
+           !is.na(CONDUCTIVIDAD)
+  ) %>%
+  ggplot ( aes (x = CALCIO, y = CONDUCTIVIDAD)
+  ) +
+  geom_point( size = 1
+  ) +
+  geom_smooth(method = "lm", 
+              se = FALSE,
+              color = "blue") +
+  labs( title = "Diagrama de dispersion del Calcio y la Conductividad",
+        subtitle = "Correlacion entre variables con el coeficiente lineal de Pearson",
+        x = "Calcio",
+        y = "Conductividad"
+  )
+
+# Se utiliza la funcion cor() con el metodo de pearson
+# Con esto conseguimos el valor de 0.32, lo que da una correlacion debil
+datos_filtrados <- datos %>% 
+  filter(
+    !is.na(SODIO),
+    !is.na(CONDUCTIVIDAD)
+  )
+cor(
+  datos_filtrados$SODIO,
+  datos_filtrados$CONDUCTIVIDAD,
+  method = "pearson"
+)
+
+# =============================================================
+# MATRICES DE CORRELACION
+# =============================================================
+variables <- datos %>%
+  select(PH_LABORATORIO,
+         TEMPERATUR,
+         SODIO,
+         CALCIO,
+         CONDUCTIVIDAD)
+
+cor(variables,
+    use = "complete.obs",
+    method = "pearson"
+    )
