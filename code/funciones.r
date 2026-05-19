@@ -35,6 +35,7 @@ normalizar <- function(x) {
     # Normaliza barras "/" igual: " / "
     x <- gsub("\\s*/\\s*", " / ", x)
     x <- str_to_title(x) # Title Case
+  
     return(x)
 }
 
@@ -55,7 +56,7 @@ calc_cv <- function(x) {
 } 
 
 # ==============================================================
-# ASIMETRIA DE BOWLEY
+# 5. ASIMETRIA DE BOWLEY
 # ==============================================================
 # Fórmula: B = (Q3 + Q1 - 2*Q2) / (Q3 - Q1)
 # Rango: siempre entre -1 y +1.
@@ -74,7 +75,7 @@ asimetria_bowley <- function(x) {
   (Q3 + Q1 - 2 * Q2) / (Q3 - Q1)
 }
 # ==============================================================
-# CURTOSIS DE MOORS
+# 6. CURTOSIS DE MOORS
 # ==============================================================
 
 # Fórmula: M = (E7 - E5 + E3 - E1) / (E6 - E2)
