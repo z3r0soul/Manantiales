@@ -61,10 +61,10 @@ datos <- datos %>%
         ANIO  = as.character(year(FECHA))
     )
 
-
 # 3.  Con tidyverse, mutate se utiliza para crear una nueva columna a partir de otra ya existente.
 # En este caso, se crea la columna CLASIFICACION_LIMPIA a partir de la columna CLASIFICACIÓN y
 # la columna OLOR_LIMPIO a partir de la columna OLOR.
+
 datos <- datos %>%
     mutate(
         CLASIFICACION_LIMPIA = normalizar(CLASIFICACIÓN),
@@ -615,8 +615,8 @@ datos %>%
        subtitle = "Cada barra = 100% de los manantiales con ese olor",
        x = NULL, y = "Proporción", fill = "Categoría pH")
 
-#Grafica OLOR VS CLASIFICACION
-#Esta grafica permite afirmar que l
+# Grafica OLOR VS CLASIFICACION
+# Esta grafica permite afirmar que l
   colores_olor <- c(
   "Fuerte"   = "#d73027",
   "H2s"      = "#fc8d59",
@@ -644,10 +644,11 @@ datos %>%
     theme_minimal()
 
 
-
-# ── GRÁFICO DE PASTEL ──────────────────────────────────────────
+#=============================================================
+# GRÁFICO DE PASTEL
+# =============================================================
+  
 # NA no es categoría real: se filtra ANTES de pasar a ggplot.
-
 # Gráficos de pastel para CLASIFICACION_LIMPIA y OLOR_LIMPIO
 par(mfrow = c(2, 1))
 
@@ -662,3 +663,24 @@ clasif_pct <- round(prop.table(clasif_tabla) * 100, 1)
 clasif_labels <- paste0(names(clasif_tabla), "\n", clasif_pct, "%")
 pie(clasif_tabla, labels = clasif_labels, main = "Proporción de tipos de agua")
 
+# =============================================================
+# DIAGRAMA DE CAJA Y BIGOTES
+# =============================================================
+
+# Box plot provisional para practicar
+# Variable: pH del agua
+datos %>%
+  filter(!is.na(CLASIFICACION_LIMPIA),
+         !is.na(PH_LABORATORIO),
+         CLASIFICACION_LIMPIA != "Mixta / Compuesta") %>%
+  ggplot(aes(x    = CLASIFICACION_LIMPIA,
+             y    = PH_LABORATORIO,
+             fill = CLASIFICACION_LIMPIA)) +
+  geom_boxplot() +
+  guides(fill = "none") +
+  labs(
+    title = "Distribución del pH por tipo de agua",
+    x     = NULL,
+    y     = "pH (laboratorio)"
+  ) +
+  theme_minimal()
