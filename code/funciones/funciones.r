@@ -95,3 +95,37 @@ curtosis_moors <- function(x) {
   if (denominador == 0) return(NA_real_)
   (e[6] - e[4] + e[3] - e[1]) / denominador
 }
+
+# ==============================================================
+# 7. FUNCIÓN PARA GUARDAR LOS GRAFICOS
+# ==============================================================
+
+guardar_plot <- function(plot,
+                         nombre,
+                         carpeta = "graficos",
+                         formato = "png",
+                         width = 8,
+                         height = 5,
+                         dpi = 300){
+  
+  dir.create(
+    here("outputs", carpeta),
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+  
+  ggsave(
+    
+    filename = here(
+      "outputs",
+      carpeta,
+      paste0(nombre, ".", formato)
+    ),
+    
+    plot = plot,
+    
+    width = width,
+    height = height,
+    dpi = dpi
+  )
+}
