@@ -6,7 +6,7 @@ cat("\n=============================================================\n
     Generando percentiles y boxplots...
     \n=============================================================\n" )
 
-# 9.1 Box plot provisional para practicar
+# 9.1
 # Variable: pH del agua   
 # Hallar percentiles
 
