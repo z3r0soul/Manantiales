@@ -2,6 +2,10 @@
 # 10 ANÁLISIS DE DOS VARIABLES NUMÉRICAS
 # =============================================================
 
+cat("\n=============================================================\n
+    Generando diagramas de dispersión y matrices de 
+    correlación, covarianza y diagramas de dispersión
+    \n=============================================================\n" )
 # 10.1 Diagrama de dispersión para ver la correlación entre el sodio
 # y la conductividad
 
@@ -73,14 +77,34 @@ cor(
 # =============================================================
 # MATRICES DE CORRELACION
 # =============================================================
+cat("\n=============================================================\n
+      Generado matrices de correlación:
+      1. Vista general a todas las variables
+      2. Variables hidroquímicas
+
+    \n=============================================================\n" )
+cat(" === Vista matriz de correlación general ===\n")
 variables <- datos %>%
   select(PH_LABORATORIO,
-         TEMPERATUR,
          SODIO,
          CALCIO,
          CONDUCTIVIDAD)
 
-cor(variables,
+cor_general <- cor(variables,
     use = "complete.obs",
     method = "pearson"
 )
+print(cor_general)
+
+cat("\n=== Vista matriz de correlación propiedades hidroquímicas ===\n")
+variables2 <- datos %>%
+  select(
+    SODIO,
+    CALCIO,
+    CONDUCTIVIDAD
+  )
+
+cor(variables2, 
+    method = "pearson"
+    )
+
