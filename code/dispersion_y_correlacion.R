@@ -3,9 +3,77 @@
 # =============================================================
 
 cat("\n=============================================================\n
-    Generando diagramas de dispersión y matrices de 
-    correlación, covarianza y diagramas de dispersión
+                  ANALISIS BIVARIADO
     \n=============================================================\n" )
+
+# =============================================================
+# MATRICES DE COVARIANZA
+# =============================================================
+cat("\n=============================================================\n
+      Generando matriz de covarianza:
+      1. Variables hidroquímicas y su conductividad
+    \n=============================================================\n" )
+matriz_cov <- datos %>%
+  select(
+    SODIO,
+    CALCIO,
+    CONDUCTIVIDAD
+  ) %>%
+  cov(
+    use = "complete.obs"
+    )
+
+print (matriz_cov)
+# =============================================================
+# MATRICES DE CORRELACION
+# =============================================================
+cat("\n=============================================================\n
+      Generando matrices de correlación:
+      1. Variables hidroquímicas y su conductividad (Vista General)
+      2. Variables hidroquimicas segun tipo principal de agua
+    \n=============================================================\n" )
+
+cat(" === Vista matriz de correlación general ===\n")
+
+variables <- datos %>%
+  select(SODIO,
+         CALCIO,
+         CONDUCTIVIDAD)
+
+cor_general <- cor(variables,
+    use = "complete.obs",
+    method = "pearson"
+)
+print(cor_general)
+
+# Correlación de la Conductividad con el Sodio y el Calcio
+# A partir de la clasficación principal del agua
+
+datos_top3 %>%
+  
+  group_by(CLASIFICACION_LIMPIA) %>%
+  
+  summarise(
+    
+    correlacion_s = cor(
+      CONDUCTIVIDAD,
+      SODIO,
+      use = "complete.obs",
+      method = "pearson"
+    ),
+    correlacion_c = cor(
+        CONDUCTIVIDAD,
+        CALCIO,
+        use = "complete.obs",
+        method = "pearson"
+      ),
+    n = n()
+  )
+
+
+# =============================================================
+# DIAGRAMAS DE DISPERSIÓN
+# =============================================================
 # 10.1 Diagrama de dispersión para ver la correlación entre el sodio
 # y la conductividad
 
@@ -20,8 +88,8 @@ disp1 <- datos %>%
   geom_smooth(method = "lm", 
               se = FALSE,
               color = "red") +
-  labs( title = "Diagrama de dispersion del Sodio y la Conductividad",
-        subtitle = "Correlacion entre variables con el coeficiente lineal de Pearson",
+  labs( title = "Diagrama de dispersión del Sodio y la Conductividad",
+        subtitle = "Correlación entre variables con el coeficiente lineal de Pearson",
         x = "Sodio",
         y = "Conductividad"
   )
@@ -61,50 +129,25 @@ guardar_plot(
   "graficos_dispersion"
 )
 
-# Se utiliza la funcion cor() con el metodo de pearson
-# Con esto conseguimos el valor de 0.32, lo que da una correlacion debil
-datos_filtrados <- datos %>% 
-  filter(
-    !is.na(SODIO),
-    !is.na(CONDUCTIVIDAD)
-  )
-cor(
-  datos_filtrados$SODIO,
-  datos_filtrados$CONDUCTIVIDAD,
-  method = "pearson"
-)
-
-# =============================================================
-# MATRICES DE CORRELACION
-# =============================================================
+# MATRIZ DIAGRAMAS DE DISPERSIÓN
 cat("\n=============================================================\n
-      Generado matrices de correlación:
-      1. Vista general a todas las variables
-      2. Variables hidroquímicas
-
+      Generando matriz de diagramas de dispersión
     \n=============================================================\n" )
-cat(" === Vista matriz de correlación general ===\n")
-variables <- datos %>%
-  select(PH_LABORATORIO,
-         SODIO,
-         CALCIO,
-         CONDUCTIVIDAD)
 
-cor_general <- cor(variables,
-    use = "complete.obs",
-    method = "pearson"
-)
-print(cor_general)
-
-cat("\n=== Vista matriz de correlación propiedades hidroquímicas ===\n")
-variables2 <- datos %>%
+datos %>%
   select(
     SODIO,
     CALCIO,
     CONDUCTIVIDAD
-  )
-
-cor(variables2, 
-    method = "pearson"
+  ) %>%
+  ggpairs(
+    upper = list(
+      continuous = wrap("cor", size = 4)
+    ),
+    lower = list(
+      continuous = "points"
+    ),
+    diag = list(
+      continuous = "barDiag"
     )
-
+  )

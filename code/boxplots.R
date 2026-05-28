@@ -89,7 +89,7 @@ print(boxplot2_summarise)
 
 # Creación del boxplot2
 
-box2 <- datos_top %>%
+box2 <- datos_top3 %>%
   filter(!is.na(CLASIFICACION_LIMPIA),
          !is.na(TEMPERATUR)
          ) %>%

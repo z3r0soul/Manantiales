@@ -11,7 +11,7 @@ if (!require("readr")) install.packages("readr")
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("lubridate")) install.packages("lubridate")
 if (!require("stringr")) install.packages("stringr")
-
+if (!require("GGally")) install.packages("GGally")
 # Cargar librerías necesarias
 library(patchwork)
 library(here)
@@ -22,3 +22,4 @@ library(moments)
 library(dplyr) # %>%, mutate, filter, count
 library(lubridate) # year()
 library(stringr) # str_trim, str_squish, str_to_title
+library(GGally)
