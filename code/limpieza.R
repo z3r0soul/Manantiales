@@ -29,6 +29,20 @@ datos <- datos %>%
     OLOR_LIMPIO          = normalizar(OLOR)
   )
 
+# Se tratan como NA a un conjunto de datos atípicos,
+# posiblemente estos mismos son resultado de mediciones erróneas
+# 1. No es probable que un manantial llegue a una temperatura de 0 grados
+# por las condiciones geotérmicas del territorio colombiano
+# 2. Los pH totalmente ácidos en aguas de manantiales es casi que imposible, 
+# pues estas llevan años pasando por piedras que favorecen la mineralización
+# así como las piedras calizas
+
+datos <- datos %>%
+  mutate(
+    PH_LABORATORIO = na_if(PH_LABORATORIO, 0),
+    TEMPERATUR     = na_if(TEMPERATUR, 0)
+  )
+
 # Categorizar pH en tres grupos con significado geoquímico:
 # Ácido < 6.5 | Neutro 6.5–7.5 | Básico > 7.5
 # Justificación: el punto de corte 6.5/7.5 es el estándar OMS
@@ -64,22 +78,8 @@ datos <- datos %>%
 
 # SECCION 2: Filtrado de variables (Exclusión de valores NA e inválidos)
 
-# 1. Para el diagrama de hoja y tallo se requiere
-# limpiar los datos del pH y la Temperatura, entonces: 
 
-# Limpieza del pH:
-
-ph_limpio <- datos$PH_LABORATORIO[
-  !is.na(datos$PH_LABORATORIO) & datos$PH_LABORATORIO > 0
-]
-
-# Limpieza de la Temperatura:
-
-temp_limpia <- datos$TEMPERATUR[
-  !is.na(datos$TEMPERATUR) & datos$TEMPERATUR > 0
-]
-
-# 2. Limpiar los datos para las tablas de frecuencias univariadas
+# 1. Filtrar los datos para las tablas de frecuencias univariadas
 
 # Limpieza de los datos de la Clasificación del agua 
 # Se utiliza CLASIFICACION_LIMPIA porque está normalizada
