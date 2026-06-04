@@ -38,7 +38,8 @@ print(boxplot1_summarise)
 # Creación del boxplot1  
 box1 <- datos_top3 %>%
   filter(!is.na(CLASIFICACION_LIMPIA),
-         !is.na(PH_LABORATORIO)
+         !is.na(PH_LABORATORIO),
+          PH_LABORATORIO >= 4.0
   ) %>%
   ggplot(aes(x    = CLASIFICACION_LIMPIA,
              y    = PH_LABORATORIO,
@@ -69,6 +70,7 @@ cat("\n === Resumen del diagrama de caja de Clasificación vs Temperatura ===\n"
 boxplot2_summarise <- datos_top3 %>% 
   filter (!is.na(CLASIFICACION_LIMPIA), 
           !is.na(TEMPERATUR),
+          TEMPERATUR > 0
           ) %>%
   group_by(CLASIFICACION_LIMPIA) %>%
   summarise(
@@ -91,7 +93,8 @@ print(boxplot2_summarise)
 
 box2 <- datos_top3 %>%
   filter(!is.na(CLASIFICACION_LIMPIA),
-         !is.na(TEMPERATUR)
+         !is.na(TEMPERATUR),
+         TEMPERATUR > 0
          ) %>%
   ggplot(aes(x    = CLASIFICACION_LIMPIA,
              y    = TEMPERATUR,
