@@ -134,7 +134,7 @@ cat("\n=============================================================\n
       Generando matriz de diagramas de dispersión
     \n=============================================================\n" )
 
-datos %>%
+matriz_diag <- datos %>%
   select(
     SODIO,
     CALCIO,
@@ -142,12 +142,14 @@ datos %>%
   ) %>%
   ggpairs(
     upper = list(
-      continuous = wrap("cor", size = 4)
+      continuous = "points"
     ),
     lower = list(
       continuous = "points"
     ),
     diag = list(
-      continuous = "barDiag"
+      continuous = "densityDiag"
     )
   )
+
+print(matriz_diag)
