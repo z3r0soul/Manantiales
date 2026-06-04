@@ -82,8 +82,8 @@ print(round(prop.table(tabla_temp) * 100, 1))
 datos_pt <- datos %>% filter(!is.na(PH_CAT), 
                              !is.na(TEMP_CAT)
 )
-tabla_pt <- table(pH = datos_pt$PH_CAT, 
-                  Temperatura = datos_pt$TEMP_CAT
+tabla_pt <- table(pH = datos$PH_CAT, 
+                  Temperatura = datos$TEMP_CAT
 )
 
 cat("\n══ PH_CAT × TEMP_CAT — frecuencias ABSOLUTAS ══\n")
@@ -104,9 +104,6 @@ print(round(prop.table(tabla_pt, margin = 2) * 100, 1))
 # Justificación: permite ver si el tipo de agua está asociado
 # con la acidez del manantial. La Sulfatada debería tener más ácidos
 # por la oxidación de sulfuros; la Bicarbonatada, más neutros.
-top3 <- c("Bicarbonatada", "Clorurada", "Sulfatada")
-datos_top3 <- datos %>%
-  filter(CLASIFICACION_LIMPIA %in% top3, !is.na(PH_CAT))
 
 tabla_cruzada <- table(
   pH          = datos_top3$PH_CAT,
@@ -148,15 +145,15 @@ print(round(prop.table(tabla_ph_olor, margin = 2) * 100, 1))
 # Usamos las columnas LIMPIAS para que las variantes normalizadas se agrupen.
 
 # 6.1 Clasificacion del agua
-b1 <- ggplot(datos %>% filter(!is.na(CLASIFICACION_LIMPIA)), aes(x = CLASIFICACION_LIMPIA, fill =  CLASIFICACION_LIMPIA)) +
+b1 <- ggplot(datos_top3 %>% filter(!is.na(CLASIFICACION_LIMPIA)), aes(x = CLASIFICACION_LIMPIA, fill =  CLASIFICACION_LIMPIA)) +
   geom_bar() +
   guides(fill = "none") +
-  coord_flip() +
   labs(
-    title = "Clasificacion del agua segun la cantidad de manantiales",
-    x = "Clasificacion del agua",
-    y = "Cantidad de manantiales"
-  )
+    title = "Clasificación del agua segun la \ncantidad de manantiales",
+    x = "Clasificaciones principales del agua",
+    y = "Número de manantiales"
+  ) + 
+  theme_minimal()
 
 print(b1)
 
@@ -168,13 +165,20 @@ guardar_plot(
 
 
 # 6.2 Grafico de olor por cantidad de manantiales
-b2 <- ggplot (datos %>% filter(!is.na(OLOR_LIMPIO)), aes( x = OLOR_LIMPIO, fill = OLOR_LIMPIO)) + 
+# Ordenamos de forma creciente
+# Reordenamos los niveles de Olor de menor a mayor frecuencia antes de graficar
+
+datos_analisis$OLOR_LIMPIO <- reorder(datos_analisis$OLOR_LIMPIO, datos_analisis$OLOR_LIMPIO, length)
+b2 <- ggplot(datos_analisis, aes(x = OLOR_LIMPIO, fill = OLOR_LIMPIO)) +
   geom_bar() +
-  guides(fill = "none") +
   labs(
-    title = "Olor del agua en la cantidad de manantiales",
+    title = "Olor del agua según la cantidad de manantiales",
     x = "Tipo de Olor",
     y = "Cantidad de manantiales"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none"
   )
 
 print(b2)
@@ -190,7 +194,8 @@ guardar_plot(
 # Justificación: PH_CAT convierte el pH continuo en tres grupos
 # geoquímicamente significativos y permite comparaciones directas
 # con variables categóricas como Clasificación.
-b3 <- ggplot(datos %>% filter(!is.na(PH_CAT)), aes(x = PH_CAT, fill = PH_CAT)) +
+b3 <- ggplot(datos %>% filter(!is.na(PH_CAT), PH_LABORATORIO >= 4.0 ),
+             aes(x = PH_CAT, fill = PH_CAT)) +
   geom_bar() +
   scale_fill_manual(values = c("Ácido" = "#d73027",
                                "Neutro" = "#fee08b",
@@ -199,7 +204,7 @@ b3 <- ggplot(datos %>% filter(!is.na(PH_CAT)), aes(x = PH_CAT, fill = PH_CAT)) +
   geom_text(stat = "count", aes(label = after_stat(count)),
             vjust = -0.5, size = 4) +
   labs(title = "Categorías de pH en manantiales colombianos",
-       subtitle = "Ácido < 6.5  |  Neutro 6.5–7.5  |  Básico > 7.5  (n = 320)",
+       subtitle = "Ácido < 6.5  |  Neutro 6.5–7.5  |  Básico > 7.5",
        x = "Categoría de pH", y = "Número de manantiales")
 
 print(b3)
@@ -213,19 +218,18 @@ guardar_plot(
 
 # 6.4  Grafico de temperatura categorizada
 
-b4 <- ggplot(datos %>% filter(!is.na(TEMP_CAT)), aes(x = TEMP_CAT, fill = TEMP_CAT)) +
-  geom_bar() +
-  scale_fill_manual(values = c("Fría"   = "#4393c3",
-                               "Tibia"  = "#f4a582",
-                               "Termal" = "#d6604d")) +
-  guides(fill = "none") +
-  geom_text(stat = "count", aes(label = after_stat(count)),
-            vjust = -0.5, size = 4) +
-  labs(title = "Categorías de temperatura en manantiales colombianos",
-       subtitle = "Fría <20°C  |  Tibia 20–50°C  |  Termal >50°C  (n = 320)",
-       x = "Categoría de temperatura", y = "Número de manantiales")
-
-print(b4)
+  b4 <- ggplot(datos %>% filter(!is.na(TEMP_CAT)), aes(x = TEMP_CAT, fill = TEMP_CAT)) +
+    geom_bar() +
+    scale_fill_manual(values = c("Tibia"  = "#f4a582",
+                                 "Termal" = "#d6604d")) +
+    guides(fill = "none") +
+    geom_text(stat = "count", aes(label = after_stat(count)),
+              vjust = -0.5, size = 4) +
+    labs(title = "Categorías de temperatura en manantiales colombianos",
+         subtitle = "Fría <20°C  |  Tibia 20–50°C  |  Termal >50°C  (n = 320)",
+         x = "Categoría de temperatura", y = "Número de manantiales")
+  
+  print(b4)
 
 guardar_plot(
   b4,
@@ -258,7 +262,7 @@ guardar_plot(
 
 # 7.1 Diagrama de pH vs Temperatura
 bb1 <- datos %>%
-  filter(!is.na(PH_CAT), !is.na(TEMP_CAT)) %>%
+  filter(!is.na(PH_CAT), !is.na(TEMP_CAT), TEMP_CAT != "Fría") %>%
   ggplot(aes(x = TEMP_CAT, fill = PH_CAT)) +
   geom_bar(position = "fill") +
   scale_fill_manual(values = c("Ácido"  = "#d73027",
@@ -282,7 +286,7 @@ guardar_plot(
 # Solo top 3 clasificaciones para legibilidad.
 
 bb2 <- datos %>%
-  filter(CLASIFICACION_LIMPIA %in% top3, !is.na(PH_CAT)) %>%
+  filter(CLASIFICACION_LIMPIA %in% top3, !is.na(PH_CAT), PH_LABORATORIO >= 4.0) %>%
   ggplot(aes(x = CLASIFICACION_LIMPIA, fill = PH_CAT)) +
   geom_bar(position = "fill") +
   scale_y_continuous(labels = percent) +
@@ -309,17 +313,19 @@ guardar_plot(
 # Justificación: el H2S disuelto reduce el pH.
 # Si los manantiales con olor a H2S tienen más categoría Ácido,
 # se confirma la relación entre origen volcánico y acidez.
+  
 
 bb3 <- datos %>%
-  filter(!is.na(PH_CAT), !is.na(OLOR_LIMPIO)) %>%
-  ggplot(aes(x = OLOR_LIMPIO, fill = PH_CAT)) +
+  filter(!is.na(PH_CAT), 
+         !is.na(OLOR_BIN),
+         PH_LABORATORIO >= 4.0) %>%
+  ggplot(aes(x = OLOR_BIN, fill = PH_CAT)) +
   geom_bar(position = "fill") +
   scale_y_continuous(labels = percent) +
   scale_fill_manual(values = c("Ácido"  = "#d73027",
                                "Neutro" = "#fee08b",
                                "Básico" = "#1a9850")) +
-  coord_flip() +
-  labs(title = "Categoría de pH según olor del agua",
+  labs(title = "Categoría de pH según presencia de olor",
        subtitle = "Cada barra = 100% de los manantiales con ese olor",
        x = NULL, y = "Proporción", fill = "Categoría pH")
 
@@ -336,33 +342,31 @@ guardar_plot(
 # 7.4 Grafica OLOR VS CLASIFICACION
 # Esta grafica permite afirmar que l
 colores_olor <- c(
-  "Fuerte"   = "#d73027",
-  "H2s"      = "#fc8d59",
-  "Leve"     = "#fee090",
-  "Moderado" = "#91bfdb",
-  "Otro"     = "#4575b4"
+  "Con Olor" = "Black",
+  "Sin Olor" = "White"
 )
 
 bb4 <- datos %>%
   filter(
     CLASIFICACION_LIMPIA %in% top3,
-    !is.na(OLOR_LIMPIO),
-    OLOR_LIMPIO != "Ausente"        # excluir olor ausente
+    !is.na(OLOR_BIN)
   ) %>%
-  ggplot(aes(x = CLASIFICACION_LIMPIA, fill = OLOR_LIMPIO)) +
+  ggplot(aes(x = CLASIFICACION_LIMPIA, fill = OLOR_BIN)) +
   geom_bar(position = "fill") +
   scale_y_continuous(labels = percent) +
-  scale_fill_manual(values = colores_olor) +
+  scale_fill_manual(values = c("Sin olor" = "#74add1",
+                               "Con olor" = "#d73027")) +
   labs(
-    title    = "Tipo de olor según clasificación química del agua",
-    subtitle = "Solo manantiales con olor detectable (olor ausente excluido) | Top 3 clasificaciones",
-    x        = "Clasificación química",
-    y        = "Proporción de manantiales con olor",
-    fill     = "Tipo de olor"
+    title   = "Presencia de olor según tipo de agua",
+    subtitle = "Sulfatada tiene mayor proporción de olor detectable | Top 3",
+    x       = "Clasificación química",
+    y       = "Proporción",
+    fill    = "Olor"
   ) +
   theme_minimal()
 
 print(bb4)
+
 
 guardar_plot(
   bb4,
