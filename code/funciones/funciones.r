@@ -129,3 +129,28 @@ guardar_plot <- function(plot,
     dpi = dpi
   )
 }
+
+# ==============================================================
+# 8. FUNCIÓN PARA LA ESTADISTICA DESCRIPTIVA
+# ==============================================================
+
+describir_variable <- function(x, nombre = deparse(substitute(x)),
+                               bowley = FALSE, moors = FALSE) {
+  x_clean <- na.omit(x)
+  
+  cat("==", nombre, "==\n")
+  cat("  Media:              ", mean(x, na.rm = TRUE), "\n")
+  cat("  Media recortada 5%: ", mean(x, na.rm = TRUE, trim = 0.05), "\n")
+  cat("  Mediana:            ", median(x, na.rm = TRUE), "\n")
+  cat("  Moda:               ", moda(x), "\n")
+  cat("  Desv. estándar:     ", sd(x, na.rm = TRUE), "\n")
+  cat("  MEDA:               ", meda(x), "\n")
+  cat("  MAD:                ", mad(x, na.rm = TRUE), "\n")
+  cat("  CV:                 ", calc_cv(x), "\n")
+  cat("  Asimetría:          ", skewness(x_clean), "\n")
+  if (bowley) cat("  Asimetría Bowley:   ", asimetria_bowley(x_clean), "\n")
+  cat("  Curtosis:           ", kurtosis(x_clean), "\n")
+  if (moors)  cat("  Curtosis Moors:     ", curtosis_moors(x_clean), "\n")
+  cat("  Rango:              ", max(x, na.rm = TRUE) - min(x, na.rm = TRUE), "\n")
+  cat("\n")
+}
