@@ -168,6 +168,7 @@ guardar_plot(
 # Ordenamos de forma creciente
 # Reordenamos los niveles de Olor de menor a mayor frecuencia antes de graficar
 
+
 datos_analisis$OLOR_LIMPIO <- reorder(datos_analisis$OLOR_LIMPIO, datos_analisis$OLOR_LIMPIO, length)
 b2 <- ggplot(datos_analisis, aes(x = OLOR_LIMPIO, fill = OLOR_LIMPIO)) +
   geom_bar() +
@@ -226,7 +227,7 @@ guardar_plot(
     geom_text(stat = "count", aes(label = after_stat(count)),
               vjust = -0.5, size = 4) +
     labs(title = "Categorías de temperatura en manantiales colombianos",
-         subtitle = "Fría <20°C  |  Tibia 20–50°C  |  Termal >50°C  (n = 320)",
+         subtitle =   " Tibia 20–50°C  |  Termal >50°C",
          x = "Categoría de temperatura", y = "Número de manantiales")
   
   print(b4)

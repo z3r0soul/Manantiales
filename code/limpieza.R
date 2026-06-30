@@ -33,8 +33,8 @@ datos <- datos %>%
     # pues estas llevan años pasando por piedras que favorecen la mineralización
     # así como las piedras calizas
     
-      PH_LABORATORIO = na_if(PH_LABORATORIO, 0),
-      TEMPERATUR     = na_if(TEMPERATUR, 0),
+    PH_LABORATORIO = ifelse(PH_LABORATORIO <= 4, NA, PH_LABORATORIO),
+    TEMPERATUR     = na_if(TEMPERATUR, 0),
     
     # 4. Binario: Con olor vs Sin olor (excluye NA y vacíos)
     OLOR_BIN = case_when(
@@ -73,21 +73,12 @@ datos <- datos %>%
     TEMP_CAT = factor(TEMP_CAT, levels = c("Fría", "Tibia", "Termal"))
   )
 
-# SECCION 2: Filtrado de variables (Exclusión de valores NA e inválidos)
-
-
-# 2.1 Creamos un único dataset auxiliar libre de NAs para cruces de variables
-datos_analisis <- datos %>% 
-  filter(!is.na(PH_CAT), !is.na(TEMP_CAT), 
-         !is.na(OLOR_LIMPIO), !is.na(CLASIFICACION_LIMPIA),
-         # Se filtra este pH en específico porque implica un análisis diferente
-         # Se podria decir que se puede clasificar como un grupo diferente
-         PH_LABORATORIO >= 4.0)
+# SECCION 2: Filtrado de variables
 
 # 2.2 Filtrado de datos más significativos para la Clasificación del agua
 
 # Creación de vector con las clasificaciones con mayor cantidad de datos
 top3 <- c("Bicarbonatada", "Clorurada", "Sulfatada")
 
-datos_top3 <- datos_analisis %>%
+datos_top3 <- datos %>%
   filter(CLASIFICACION_LIMPIA %in% top3)
