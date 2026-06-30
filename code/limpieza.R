@@ -6,9 +6,21 @@
 
 # SECCIÓN 1: Creación de columnas normalizadas y manejo de tipo especial de variable (Fecha)
 
+# 1. Eliminar las 3 filas completamente vacías (todo en 0)
+datos <- datos %>%
+  filter(!(SODIO == 0 & CONDUCTIVIDAD == 0 & PH_LABORATORIO == 0 & TEMPERATUR == 0))
+
+# 2. Convertir a NA los ceros sospechosos en sodio y conductividad
+#    (cuando el resto de la fila tiene valores normales, el 0 es "no medido")
 datos <- datos %>%
   mutate(
-    # 1. Extracción del AÑO y transformación de la columna FECHA
+    # 1. Convertir a NA los ceros sospechosos en sodio y conductividad
+    # (cuando el resto de la fila tiene valores normales, el 0 es "no medido")
+    
+    SODIO = ifelse(SODIO == 0, NA, SODIO),
+    CONDUCTIVIDAD = ifelse(CONDUCTIVIDAD == 0, NA, CONDUCTIVIDAD),
+    
+    # 2. Extracción del AÑO y transformación de la columna FECHA
     # Aquí extraemos el AÑO de la columna FECHA y lo guardamos en una nueva columna llamada ANIO.
     # La columna FECHA se convierte a formato de fecha y se extrae el año.
     # as.Date(FECHA, format = "%m/%d/%Y") convierte la columna FECHA a formato de fecha
@@ -18,14 +30,14 @@ datos <- datos %>%
     FECHA = as.Date(FECHA, format = "%m/%d/%Y"),
     ANIO  = as.character(year(FECHA)),
     
-    # 2. Con tidyverse, mutate se utiliza para crear una nueva columna a partir de otra ya existente.
+    # 3. Con tidyverse, mutate se utiliza para crear una nueva columna a partir de otra ya existente.
     # En este caso, se crea la columna CLASIFICACION_LIMPIA a partir de la columna CLASIFICACIÓN y
     # la columna OLOR_LIMPIO a partir de la columna OLOR.
     
     CLASIFICACION_LIMPIA = normalizar(CLASIFICACIÓN),
     OLOR_LIMPIO          = normalizar(OLOR),
     
-    # 3. Se tratan como NA a un conjunto de datos atípicos,
+    # 4. Se tratan como NA a un conjunto de datos atípicos,
     # posiblemente estos mismos son resultado de mediciones erróneas
     # 3.1 No es probable que un manantial llegue a una temperatura de 0 grados
     # por las condiciones geotérmicas del territorio colombiano
@@ -36,7 +48,7 @@ datos <- datos %>%
     PH_LABORATORIO = ifelse(PH_LABORATORIO <= 4, NA, PH_LABORATORIO),
     TEMPERATUR     = na_if(TEMPERATUR, 0),
     
-    # 4. Binario: Con olor vs Sin olor (excluye NA y vacíos)
+    # 5. Binario: Con olor vs Sin olor (excluye NA y vacíos)
     OLOR_BIN = case_when(
       is.na(OLOR_LIMPIO) | OLOR_LIMPIO == "" ~ NA_character_,
       OLOR_LIMPIO == "Ausente"               ~ "Sin olor",
@@ -44,7 +56,7 @@ datos <- datos %>%
     ),
     OLOR_BIN = factor(OLOR_BIN, levels = c("Sin olor", "Con olor")),
     
-    # 5. Categorizar pH en tres grupos con significado geoquímico:
+    # 6. Categorizar pH en tres grupos con significado geoquímico:
     # Ácido < 6.5 | Neutro 6.5–7.5 | Básico > 7.5
     # Justificación: el punto de corte 6.5/7.5 es el estándar OMS
     # para calidad del agua
@@ -57,7 +69,7 @@ datos <- datos %>%
     ),
     PH_CAT = factor(PH_CAT, levels = c("Ácido", "Neutro", "Básico")),
     
-    # 6. Temperatura categorizada
+    # 7. Temperatura categorizada
     # Al igual que PH_CAT, convertir temperatura continua
     # en categorías permite análisis bivariado y comunica mejor
     # el significado geotérmico que un histograma solo.
