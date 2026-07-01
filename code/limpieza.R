@@ -14,11 +14,12 @@ datos <- datos %>%
 #    (cuando el resto de la fila tiene valores normales, el 0 es "no medido")
 datos <- datos %>%
   mutate(
-    # 1. Convertir a NA los ceros sospechosos en sodio y conductividad
+    # 1. Convertir a NA los ceros sospechosos en sodio, calcio y conductividad
     # (cuando el resto de la fila tiene valores normales, el 0 es "no medido")
     
-    SODIO = ifelse(SODIO == 0, NA, SODIO),
-    CONDUCTIVIDAD = ifelse(CONDUCTIVIDAD == 0, NA, CONDUCTIVIDAD),
+    CALCIO        = na_if(CALCIO, 0),
+    SODIO         = na_if(SODIO, 0),
+    CONDUCTIVIDAD = na_if(CONDUCTIVIDAD, 0),
     
     # 2. Extracción del AÑO y transformación de la columna FECHA
     # Aquí extraemos el AÑO de la columna FECHA y lo guardamos en una nueva columna llamada ANIO.
@@ -41,7 +42,7 @@ datos <- datos %>%
     # posiblemente estos mismos son resultado de mediciones erróneas
     # 3.1 No es probable que un manantial llegue a una temperatura de 0 grados
     # por las condiciones geotérmicas del territorio colombiano
-    # 3.2 Los pH totalmente ácidos en aguas de manantiales es casi que imposible, 
+    # 3.2 Los pH totalmente ácidos (0) en aguas de manantiales es casi que imposible, 
     # pues estas llevan años pasando por piedras que favorecen la mineralización
     # así como las piedras calizas
     
@@ -82,7 +83,7 @@ datos <- datos %>%
       TEMPERATUR > 50  ~ "Termal",
       TRUE ~ NA_character_
     ),
-    TEMP_CAT = factor(TEMP_CAT, levels = c("Fría", "Tibia", "Termal"))
+    TEMP_CAT = factor(TEMP_CAT, levels = c("Tibia", "Termal"))
   )
 
 # SECCION 2: Filtrado de variables
@@ -90,6 +91,7 @@ datos <- datos %>%
 # 2.2 Filtrado de datos más significativos para la Clasificación del agua
 
 # Creación de vector con las clasificaciones con mayor cantidad de datos
+
 top3 <- c("Bicarbonatada", "Clorurada", "Sulfatada")
 
 datos_top3 <- datos %>%

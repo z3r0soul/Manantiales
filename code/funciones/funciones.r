@@ -40,13 +40,12 @@ normalizar <- function(x) {
 }
 
 # ==============================================================
-# 3. MEDA: mediana de las desviaciones absolutas respecto a la mediana
+# 3. MAD: media de las desviaciones absolutas respecto a la mediana
 # ==============================================================
-# Más robusta que la desv. estándar cuando hay valores atípicos
-# Indica cuánto se desvían los datos respecto a la mediana, es útil para valores muy extremos
-meda <- function(x) {
+
+mad_clase <- function(x, na.rm = TRUE) {
     x <- na.omit(x)
-    median(abs(x - median(x)))
+    mean(abs(x - median(x)))
 }
 # ==============================================================
 # 4. COEFICIENTE DE VARIACION
@@ -144,8 +143,8 @@ describir_variable <- function(x, nombre = deparse(substitute(x)),
   cat("  Mediana:            ", median(x, na.rm = TRUE), "\n")
   cat("  Moda:               ", moda(x), "\n")
   cat("  Desv. estándar:     ", sd(x, na.rm = TRUE), "\n")
-  cat("  MEDA:               ", meda(x), "\n")
-  cat("  MAD:                ", mad(x, na.rm = TRUE), "\n")
+  cat("  MEDA:               ", mad(x, constant = 1), "\n")
+  cat("  MAD:                ", mad_clase(x, na.rm = TRUE), "\n")
   cat("  CV:                 ", calc_cv(x), "\n")
   cat("  Asimetría:          ", skewness(x_clean), "\n")
   if (bowley) cat("  Asimetría Bowley:   ", asimetria_bowley(x_clean), "\n")

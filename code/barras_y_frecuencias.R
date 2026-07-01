@@ -169,8 +169,8 @@ guardar_plot(
 # Reordenamos los niveles de Olor de menor a mayor frecuencia antes de graficar
 
 
-datos_analisis$OLOR_LIMPIO <- reorder(datos_analisis$OLOR_LIMPIO, datos_analisis$OLOR_LIMPIO, length)
-b2 <- ggplot(datos_analisis, aes(x = OLOR_LIMPIO, fill = OLOR_LIMPIO)) +
+datos$OLOR_LIMPIO <- reorder(datos$OLOR_LIMPIO, datos$OLOR_LIMPIO, length)
+b2 <- ggplot(datos %>% filter (!is.na(OLOR_LIMPIO)), aes(x = OLOR_LIMPIO, fill = OLOR_LIMPIO)) +
   geom_bar() +
   labs(
     title = "Olor del agua según la cantidad de manantiales",
@@ -219,7 +219,7 @@ guardar_plot(
 
 # 6.4  Grafico de temperatura categorizada
 
-  b4 <- ggplot(datos %>% filter(!is.na(TEMP_CAT)), aes(x = TEMP_CAT, fill = TEMP_CAT)) +
+  b4 <- ggplot(datos %>% filter(!is.na(TEMP_CAT), !is.na(PH_LABORATORIO)), aes(x = TEMP_CAT, fill = TEMP_CAT)) +
     geom_bar() +
     scale_fill_manual(values = c("Tibia"  = "#f4a582",
                                  "Termal" = "#d6604d")) +
@@ -261,15 +261,18 @@ guardar_plot(
 # 7. DIAGRAMAS DE BARRAS — 2 VARIABLES
 # =============================================================
 
-# 7.1 Diagrama de pH vs Temperatura
+# 7.1 Diagrama de pH categorizado vs Temperatura
+
+datos_grafico_bb1 <- count (datos %>%
+  filter(!is.na(PH_CAT), !is.na(TEMP_CAT)))
 bb1 <- datos %>%
-  filter(!is.na(PH_CAT), !is.na(TEMP_CAT), TEMP_CAT != "Fría") %>%
+  filter(!is.na(PH_CAT), !is.na(TEMP_CAT)) %>%
   ggplot(aes(x = TEMP_CAT, fill = PH_CAT)) +
   geom_bar(position = "fill") +
   scale_fill_manual(values = c("Ácido"  = "#d73027",
                                "Neutro" = "#fee08b",
                                "Básico" = "#1a9850")) +
-  labs(title = "Categoría de pH según temperatura del agua",
+  labs(title = paste0("Categoría de pH según temperatura del agua, n = ", nrow = (datos_grafico_bb1)),
        subtitle = "Cada barra = 100% de los manantiales de esa temperatura",
        x = "Temperatura", y = "Proporción", fill = "pH")
 
@@ -286,17 +289,21 @@ guardar_plot(
 # Este gráfico responde: ¿el tipo de agua está asociado con la acidez?
 # Solo top 3 clasificaciones para legibilidad.
 
+datos_grafico_bb2 <- count (datos %>%
+  filter(!is.na(CLASIFICACION_LIMPIA), !is.na(PH_CAT)))
+
 bb2 <- datos %>%
-  filter(CLASIFICACION_LIMPIA %in% top3, !is.na(PH_CAT), PH_LABORATORIO >= 4.0) %>%
+  filter(CLASIFICACION_LIMPIA %in% top3, !is.na(PH_CAT)) %>%
   ggplot(aes(x = CLASIFICACION_LIMPIA, fill = PH_CAT)) +
   geom_bar(position = "fill") +
   scale_y_continuous(labels = percent) +
   scale_fill_manual(values = c("Ácido"  = "#d73027",
                                "Neutro" = "#fee08b",
                                "Básico" = "#1a9850")) +
-  labs(title = "Categoría de pH según tipo de agua",
+  labs(title = paste0("Categoría de pH según tipo de agua  n = ", nrow = (datos_grafico_bb2)),
        subtitle = "Cada barra = 100% de los manantiales de ese tipo",
-       x = NULL, y = "Proporción", fill = "Categoría pH")
+       x = NULL, y = "Proporción", fill = "Categoría pH") +
+  theme_minimal()
 
 print(bb2)
 
@@ -314,19 +321,19 @@ guardar_plot(
 # Justificación: el H2S disuelto reduce el pH.
 # Si los manantiales con olor a H2S tienen más categoría Ácido,
 # se confirma la relación entre origen volcánico y acidez.
-  
+
+datos_grafico_bb3 <- count (datos %>%
+filter(!is.na(PH_CAT), !is.na(OLOR_BIN)))
 
 bb3 <- datos %>%
-  filter(!is.na(PH_CAT), 
-         !is.na(OLOR_BIN),
-         PH_LABORATORIO >= 4.0) %>%
+  filter(!is.na(PH_CAT), !is.na(OLOR_BIN)) %>%
   ggplot(aes(x = OLOR_BIN, fill = PH_CAT)) +
   geom_bar(position = "fill") +
   scale_y_continuous(labels = percent) +
   scale_fill_manual(values = c("Ácido"  = "#d73027",
                                "Neutro" = "#fee08b",
                                "Básico" = "#1a9850")) +
-  labs(title = "Categoría de pH según presencia de olor",
+  labs(title = paste0("Categoría de pH según presencia de olor, n = ", nrow = (datos_grafico_bb3)),
        subtitle = "Cada barra = 100% de los manantiales con ese olor",
        x = NULL, y = "Proporción", fill = "Categoría pH")
 
@@ -342,11 +349,9 @@ guardar_plot(
 
 # 7.4 Grafica OLOR VS CLASIFICACION
 # Esta grafica permite afirmar que l
-colores_olor <- c(
-  "Con Olor" = "Black",
-  "Sin Olor" = "White"
-)
 
+datos_grafico_bb4 <- count (datos %>%
+                              filter(!is.na(CLASIFICACION_LIMPIA), !is.na(OLOR_BIN)))
 bb4 <- datos %>%
   filter(
     CLASIFICACION_LIMPIA %in% top3,
@@ -358,7 +363,7 @@ bb4 <- datos %>%
   scale_fill_manual(values = c("Sin olor" = "#74add1",
                                "Con olor" = "#d73027")) +
   labs(
-    title   = "Presencia de olor según tipo de agua",
+    title   = paste0("Presencia de olor según tipo de agua, n = ", nrow = datos_grafico_bb4 ),
     subtitle = "Sulfatada tiene mayor proporción de olor detectable | Top 3",
     x       = "Clasificación química",
     y       = "Proporción",
