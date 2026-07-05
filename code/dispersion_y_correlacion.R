@@ -153,3 +153,54 @@ matriz_diag <- datos %>%
   )
 
 print(matriz_diag)
+
+# =============================================================
+# DIAGRAMAS DE DISPERSIÓN PARA 3 VARIABLES
+# =============================================================
+# 11. Gráfico de dispersión para Sodio, Calcio y Conductividad
+# Se identifican tres grupos geoquímicos:
+# 1. Sistema geotérmico Paipa-Iza (Boyacá) - aguas sulfatadas sódicas de origen magmático
+# 2. Salmuera extrema (ID 1283) — conductividad de 278,000 µS/cm
+# 3. Resto de manantiales
+datos_3d <- datos %>%
+  filter(
+    !is.na(SODIO), !is.na(CALCIO), !is.na(CONDUCTIVIDAD),
+    SODIO > 0, CALCIO > 0, CONDUCTIVIDAD > 0
+  ) %>%
+  mutate(sistema = case_when(
+    LATITUD >= 5.7 & LATITUD <= 5.8 &
+      LONGITUD >= -73.2 & LONGITUD <= -73.0 ~ "Sistema Paipa-Iza",
+    ID_MANANTIAL == 1283                  ~ "Salmuera extrema",
+    TRUE                                  ~ "Resto de manantiales"
+  ))
+
+n_3d <- nrow(datos_3d)
+
+colores <- c(
+  "Sistema Paipa-Iza"   = "#e74c3c",
+  "Salmuera extrema"    = "#f39c12",
+  "Resto de manantiales"= "#402816"
+)
+
+g3d <- scatterplot3d(
+  x     = log10(datos_3d$SODIO),
+  y     = log10(datos_3d$CALCIO),
+  z     = log10(datos_3d$CONDUCTIVIDAD),
+  color = colores[datos_3d$sistema],
+  pch   = ifelse(datos_3d$sistema == "Resto de manantiales", 16, 17),
+  xlab  = "Sodio — log10(mg/L)",
+  ylab  = "Calcio — log10(mg/L)",
+  zlab  = "Conductividad — log10(µS/cm)",
+  main  = paste0("Sodio, Calcio y Conductividad por sistema geoquímico  |  n = ", n_3d),
+  grid  = TRUE,
+  box   = TRUE,
+  angle = 30
+)
+
+legend("topleft",
+       legend = names(colores),
+       col    = colores,
+       pch    = c(17, 17, 16),
+       bty    = "n")
+
+guardar_plot(g3d, "scatterplot3d_sodio_calcio_conductividad")
