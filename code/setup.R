@@ -12,6 +12,7 @@ if (!require("dplyr")) install.packages("dplyr")
 if (!require("lubridate")) install.packages("lubridate")
 if (!require("stringr")) install.packages("stringr")
 if (!require("GGally")) install.packages("GGally")
+if (!require("scatterplot3d")) install.packages("scatterplot3d")
 # Cargar librerías necesarias
 library(patchwork)
 library(here)
@@ -23,3 +24,4 @@ library(dplyr) # %>%, mutate, filter, count
 library(lubridate) # year()
 library(stringr) # str_trim, str_squish, str_to_title
 library(GGally)
+library("scatterplot3d")
