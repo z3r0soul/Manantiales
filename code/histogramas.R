@@ -3,12 +3,10 @@
 # ========================
 
 # GRÁFICO 5.1: HISTOGRAMA DE pH
-# (Objetivo 1)
-# POR QUÉ ESTE GRÁFICO: El pH es numérica continua → histograma.
-# Queremos ver si los manantiales son mayormente ácidos, neutros o básicos.
 # bins = 9 porque tenemos 320 filas → regla de Sturges: 1 + log2(320) ≈ 9
+n_ph <- sum(!is.na(datos$PH_LABORATORIO))
 
-h1 <- ggplot(datos, aes(x = PH_LABORATORIO)) +
+h1 <- ggplot(datos %>% filter(!is.na(PH_LABORATORIO)), aes(x = PH_LABORATORIO)) +
   geom_histogram(bins = 9, fill = "#402816", color = "white") +
   geom_vline(
     xintercept = mean(datos$PH_LABORATORIO, na.rm = TRUE),
@@ -20,27 +18,23 @@ h1 <- ggplot(datos, aes(x = PH_LABORATORIO)) +
   ) +
   labs(
     title = "Distribución del pH en manantiales colombianos",
-    subtitle = "Azul = Media (6.33)  |  Amarillo = Mediana (6.51)",
+    subtitle = paste0("Azul = Media (6.33)  |  Amarillo = Mediana (6.51)  |  n = ", nrow = n_ph),
     x = "pH (laboratorio)",
     y = "Número de manantiales"
   )
-
 print(h1)
+guardar_plot(h1, "histograma_ph")
 
-guardar_plot(
-  h1, "histograma_ph"
-)
 # CONCLUSIÓN: La mayoría de manantiales son ligeramente ácidos (pH entre 5 y 7).
 # La media menor que la mediana indica que algunos pozos muy ácidos
 # arrastran la media hacia abajo.
 
-
 # GRÁFICO 5.2: HISTOGRAMA DE TEMPERATURA
-# (Objetivo 1)
 # POR QUÉ ESTE GRÁFICO: Temperatura es numérica continua → histograma.
 # Nos permite clasificar si el agua es fría (<20°C) o termal (>20°C).
+n_temp <- sum(!is.na(datos$TEMPERATUR))
 
-h2 <- ggplot(datos, aes(x = TEMPERATUR)) +
+h2 <- ggplot(datos %>% filter(!is.na(TEMPERATUR)), aes(x = TEMPERATUR)) +
   geom_histogram(bins = 9, fill = "#8bbee0", color = "white") +
   geom_vline(
     xintercept = mean(datos$TEMPERATUR, na.rm = TRUE),
@@ -52,71 +46,62 @@ h2 <- ggplot(datos, aes(x = TEMPERATUR)) +
   ) +
   labs(
     title = "Distribución de temperatura del agua",
-    subtitle = "Rojo = Media (41.75°C)  |  Naranja = Mediana (39°C)",
+    subtitle = paste0("Rojo = Media (41.75°C)  |  Naranja = Mediana (39°C)  |  n = ", nrow = n_temp),
     x = "Temperatura (°C)",
     y = "Número de manantiales"
   )
-
 print(h2)
+guardar_plot(h2, "histograma_temperatura")
 
-guardar_plot(
-  h2, "histograma_temperatura"
-)
 # CONCLUSIÓN: La mayoría del agua sale entre 30°C y 60°C → aguas termales.
 # La cola a la derecha (valores >80°C) explica que la media supere a la mediana.
 
-
 # GRÁFICO 5.3: HISTOGRAMA DE CONDUCTIVIDAD
-# (Objetivo 1)
-# POR QUÉ ESTE GRÁFICO: Conductividad es numérica continua → histograma.
 # Usamos escala logarítmica porque el rango es enorme (0 a 278,000 µS/cm).
 # Sin log, el 95% de los datos se aplasta en la izquierda y no se ve nada.
 
-h3 <- ggplot(datos, aes(x = CONDUCTIVIDAD)) +
+n_cond <- sum(!is.na(datos$CONDUCTIVIDAD))
+
+h3 <- ggplot(datos %>% filter(!is.na(CONDUCTIVIDAD)), aes(x = CONDUCTIVIDAD)) +
   geom_histogram(bins = 9, fill = "darkgreen", color = "white") +
-  scale_x_log10() + # escala logarítmica en el eje X
+  scale_x_log10() +
   labs(
     title = "Distribución de conductividad eléctrica (escala log)",
-    subtitle = "Escala logarítmica usada por el rango extremo de valores",
+    subtitle = paste0("Escala logarítmica usada por el rango extremo de valores  |  n = ", nrow = n_cond),
     x = "Conductividad (µS/cm) — escala log",
     y = "Número de manantiales"
   )
-# CONCLUSIÓN: La mayoría de manantiales tiene conductividad entre 100 y 10,000 µS/cm.
-# Unos pocos superan los 100,000, indicando agua muy salina (probablemente fumarolas).
-
 print(h3)
+guardar_plot(h3, "histograma_conductividad")
 
-guardar_plot(
-  h3, "histograma_conductividad"
-)
+# CONCLUSIÓN: La mayoría de manantiales tiene conductividad entre 100 y 10,000 µS/cm.
+# Unos pocos superan los 100,000, indicando agua muy salina 
 
-# GRAFICO 5.4: HISTOGRAMA DE LAS CONCENTRACIONES DE SODIO
-h4 <- ggplot(datos, aes(x = SODIO)) +
+# GRÁFICO 5.4: HISTOGRAMA DE SODIO
+n_sodio <- sum(!is.na(datos$SODIO))
+
+h4 <- ggplot(datos %>% filter(!is.na(SODIO)), aes(x = SODIO)) +
   geom_histogram(bins = 9, fill = "#a82339", color = "white") +
-  scale_x_log10() + # escala logarítmica en el eje X
+  scale_x_log10() +
   labs(
     title = "Distribución de las concentraciones de sodio",
-    subtitle = "Rojo = Media (706.78)  |  Naranja = Mediana (170.8)",
+    subtitle = paste0("Rojo = Media (706.78)  |  Naranja = Mediana (170.8)  |  n =", nrow = n_sodio),
     x = "Concentración de sodio (mg/L)",
     y = "Número de manantiales"
   )
-
 print(h4)
+guardar_plot(h4, "histograma_sodio")
 
-guardar_plot(
-  h4, "histograma_sodio"
-)
+# GRÁFICO 5.5: HISTOGRAMA DE CALCIO
+n_calcio <- sum(!is.na(datos$CALCIO))
 
-# GRAFICO 5.5: HISTOGRAMA DE LAS CONCENTRACIONES DE CALCIO
-h5 <- ggplot(datos, aes(x = CALCIO)) +
+h5 <- ggplot(datos %>% dplyr::filter(!is.na(CALCIO)), aes(x = CALCIO)) +
   geom_histogram(bins = 9, fill = "#a82339", color = "white") +
   labs(
+    title = "Distribución de las concentraciones de calcio",
+    subtitle = paste0("n = ", nrow = n_calcio),
     x = "Concentración de calcio (mg/L)",
     y = "Número de manantiales"
   )
-
 print(h5)
-
-guardar_plot(
-  h5, "histograma_calcio"
-)
+guardar_plot(h5, "histograma_calcio")
