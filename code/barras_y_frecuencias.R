@@ -145,11 +145,14 @@ print(round(prop.table(tabla_ph_olor, margin = 2) * 100, 1))
 # Usamos las columnas LIMPIAS para que las variantes normalizadas se agrupen.
 
 # 6.1 Clasificacion del agua
+
+b1_cuenta <- count(datos_top3 %>% filter(!is.na(CLASIFICACION_LIMPIA)))
+
 b1 <- ggplot(datos_top3 %>% filter(!is.na(CLASIFICACION_LIMPIA)), aes(x = CLASIFICACION_LIMPIA, fill =  CLASIFICACION_LIMPIA)) +
   geom_bar() +
   guides(fill = "none") +
   labs(
-    title = "Clasificación del agua segun la \ncantidad de manantiales",
+    title = paste0("Clasificación del agua segun la \ncantidad de manantiales, n = ", nrow = b1_cuenta ),
     x = "Clasificaciones principales del agua",
     y = "Número de manantiales"
   ) + 
