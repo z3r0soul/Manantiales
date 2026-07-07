@@ -204,3 +204,45 @@ legend("topleft",
        bty    = "n")
 
 guardar_plot(g3d, "scatterplot3d_sodio_calcio_conductividad")
+
+#============================
+# Correlación de Spearman y Kendall
+#============================
+
+
+datos_cor_completos <- na.omit(datos_cor)
+n_cor <- nrow(datos_cor_completos)
+
+cor_spearman <- cor(datos_cor_completos, method = "spearman")
+cor_kendall  <- cor(datos_cor_completos, method = "kendall")
+
+# Spearman
+g_spearman <- ggcorrplot(cor_spearman,
+                         method    = "square",
+                         type      = "upper",
+                         lab       = TRUE,
+                         lab_size  = 3.5,
+                         colors    = c("#e74c3c", "white", "#2c3e8c"),
+                         title     = paste0("Correlación de Spearman  |  n = ", n_cor),
+                         p.mat     = cor_pmat(datos_cor_completos, method = "spearman"),  # p-valores
+                         sig.level = 0.05,       # umbral de significancia
+                         insig     = "blank",    # deja en blanco las no significativas
+                         ggtheme   = theme_minimal())
+print(g_spearman)
+guardar_plot(g_spearman, "correlacion_spearman")
+
+# Kendall 
+g_kendall <- ggcorrplot(cor_kendall,
+                        method    = "square",
+                        type      = "upper",
+                        lab       = TRUE,
+                        lab_size  = 3.5,
+                        colors    = c("#e74c3c", "white", "#2c3e8c"),
+                        title     = paste0("Correlación de Kendall  |  n = ", n_cor),
+                        p.mat     = cor_pmat(datos_cor_completos, method = "spearman"),
+                        sig.level = 0.05,
+                        insig     = "blank",
+                        ggtheme   = theme_minimal())
+
+print(g_kendall)
+guardar_plot(g_kendall, "correlacion_kendall")
