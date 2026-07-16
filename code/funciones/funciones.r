@@ -103,33 +103,50 @@ guardar_plot <- function(plot,
                          nombre,
                          carpeta = "graficos",
                          formato = "png",
+                         tipo = c("ggplot", "base"),
                          width = 8,
                          height = 5,
                          dpi = 300){
-  
+
+  tipo <- match.arg(tipo)  
   dir.create(
     here("outputs", carpeta),
     recursive = TRUE,
     showWarnings = FALSE
   )
-  
-  ggsave(
-    
-    filename = here(
-      "outputs",
-      carpeta,
-      paste0(nombre, ".", formato)
-    ),
-    
-    plot = plot,
-    
-    width = width,
-    height = height,
-    dpi = dpi
+  switch(tipo, "ggplot" = {
+    ggsave(
+      
+      filename = here(
+        "outputs",
+        carpeta,
+        paste0(nombre, ".", formato)
+      ),
+      plot = plot,
+      
+      width = width,
+      height = height,
+      dpi = dpi
+    )
+  },
+  "base" = {
+    png(
+      filename = here(
+        "outputs",
+        carpeta,
+        paste0(nombre, ".", formato)
+      ),
+      width = width,
+      height = height,
+      units = "in",
+      res = dpi
+    )
+  },
+  stop("Gráfico no válido")
   )
 }
 
-# ==============================================================
+# ========================================================
 # 8. FUNCIÓN PARA LA ESTADISTICA DESCRIPTIVA
 # ==============================================================
 
