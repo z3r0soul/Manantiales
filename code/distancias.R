@@ -20,15 +20,15 @@
     scale()
   rownames(mat) <- ids
   
-  # Paso 2: Matrices de distancia 
+  # Matrices de distancia 
   dist_manhattan <- dist(mat, method = "manhattan")
   dist_canberra  <- dist(mat, method = "canberra")
   
-  # Paso 3: Agrupamiento jerárquico (enlace completo)
+  # Agrupamiento jerárquico (enlace completo)
   hc_manhattan <- hclust(dist_manhattan, method = "complete")
   hc_canberra  <- hclust(dist_canberra,  method = "complete")
   
-  # Paso 4: Dendrogramas para decidir número de grupos
+  # Dendrogramas para decidir número de grupos
   par(mfrow = c(1, 2))
   
   plot(hc_manhattan,
@@ -50,10 +50,10 @@
   par(mfrow = c(1, 1))
   
 #======================
-#
+# Creación de los grupos
 #======================
-  # Asignar grupos (k)
-  k <- 3  # <-- ajusta este valor según el dendrograma
+  # Asignar grupos 
+  k <- 3  
   
   datos_clust <- datos_clust %>%
     mutate(
@@ -62,9 +62,19 @@
     )
   
   #  Perfil de cada grupo 
-  cat("\n── Perfil por grupo (Manhattan) ──\n")
+  cat("\nPerfil por grupo (Manhattan)\n")
   datos_clust %>%
     group_by(grupo_manhattan) %>%
+    summarise(
+      n             = n(),
+      pH_mediano    = median(PH_LABORATORIO, na.rm = TRUE),
+      temp_mediana  = median(TEMPERATUR,     na.rm = TRUE),
+      cond_mediana  = median(CONDUCTIVIDAD,  na.rm = TRUE)
+    ) %>%
+    print()
+  cat("\nPerfil por grupo (Canberra)\n")
+  datos_clust %>%
+    group_by(grupo_canberra) %>%
     summarise(
       n             = n(),
       pH_mediano    = median(PH_LABORATORIO, na.rm = TRUE),
