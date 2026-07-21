@@ -241,25 +241,6 @@ guardar_plot(
   "graficos_barras"
 )
 
-
-# 6.5 Grafico de mediciones por anio
-
-b5 <- ggplot(datos, aes(x = ANIO)) +
-  geom_bar(fill = "#00a81e") +
-  coord_flip() +
-  labs(title = "Mediciones por año", x = NULL, y = "Cantidad de Manantiales")
-
-print(b5)
-
-guardar_plot(
-  b5,
-  "barras_mediciones_anio",
-  "graficos_barras"
-)
-
-
-
-
 # =============================================================
 # 7. DIAGRAMAS DE BARRAS — 2 VARIABLES
 # =============================================================
