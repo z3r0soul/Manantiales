@@ -18,6 +18,7 @@ if (!require("aplpack")) install.packages("aplpack")
 if (!require("ggcorrplot")) install.packages("ggcorrplot")
 if (!require("cluster")) install.packages("cluster")
 if (!require("vcd")) install.packages("vcd")
+if (!require("zoo")) install.packages("zoo")
 # Cargar librerías necesarias
 library(patchwork)
 library(here)
