@@ -30,6 +30,7 @@ source(here("code", "dispersion_y_correlacion.R"))
 # Añadir diagramas de torta (del script inicial)
 source (here("code", "tallo_y_hoja.R"))
 source(here("code", "distancias.R"))
+source(here("code", "similaridad.R"))
 
 #========================================
 # FIN DEL PROYECTO
