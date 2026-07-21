@@ -176,7 +176,29 @@ datos_3d <- datos %>%
     TRUE                                  ~ "Resto de manantiales"
   ))
 
-1
+#Def. paleta de colores
+colores <- c(
+  "Sistema Paipa-Iza"    = "#e74c3c", # Rojo
+  "Salmuera extrema"     = "#e67e22", # Naranja
+  "Resto de manantiales" = "#402816"  # Marrón oscuro
+)
+
+# ---- Generar matriz de diagramas de disp. ----
+
+# Calcular n_3d para el título dinámico
+n_3d <- nrow(datos_3d)
+
+g3d_plot <- scatterplot3d(
+  x = log10(datos_3d$SODIO),
+  y = log10(datos_3d$CALCIO),
+  z = log10(datos_3d$CONDUCTIVIDAD),
+  color = colores[datos_3d$sistema],
+  pch = ifelse(datos_3d$sistema == "Resto de manantiales", 16, 17),
+  xlab = "log10(Sodio)",
+  ylab = "log10(Calcio)",
+  zlab = "log10(Conductividad)",
+  main = paste0("Diagrama 3D: Sodio vs Calcio vs Conductividad | n = ", n_3d)
+)
 
 legend("topleft",
        legend = names(colores),
