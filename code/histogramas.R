@@ -5,7 +5,12 @@
 # GRÁFICO 5.1: HISTOGRAMA DE pH
 # bins = 9 porque tenemos 320 filas → regla de Sturges: 1 + log2(320) ≈ 9
 n_ph <- sum(!is.na(datos$PH_LABORATORIO))
+media_ph <- round(mean(datos$PH_LABORATORIO, na.rm = TRUE), 2)
+mediana_ph <- median(datos$PH_LABORATORIO, na.rm = TRUE)
 
+#manantiales_frios <- datos %>% 
+ # filter(!is.na(TEMPERATUR), TEMPERATUR < 30) %>% select(LATITUD, LONGITUD, TEMPERATUR ) %>%
+  
 h1 <- ggplot(datos %>% filter(!is.na(PH_LABORATORIO)), aes(x = PH_LABORATORIO)) +
   geom_histogram(bins = 9, fill = "#402816", color = "white") +
   geom_vline(
@@ -18,7 +23,7 @@ h1 <- ggplot(datos %>% filter(!is.na(PH_LABORATORIO)), aes(x = PH_LABORATORIO)) 
   ) +
   labs(
     title = "Distribución del pH en manantiales colombianos",
-    subtitle = paste0("Azul = Media (6.33)  |  Amarillo = Mediana (6.51)  |  n = ", nrow = n_ph),
+    subtitle = paste0("Azul = Media = ", nmed = media_ph,  "|  Amarillo = Mediana ", nmedian = mediana_ph,  "|  n =" , nrow = n_ph),
     x = "pH (laboratorio)",
     y = "Número de manantiales"
   )
@@ -32,7 +37,10 @@ guardar_plot(h1, "histograma_ph")
 # GRÁFICO 5.2: HISTOGRAMA DE TEMPERATURA
 # POR QUÉ ESTE GRÁFICO: Temperatura es numérica continua → histograma.
 # Nos permite clasificar si el agua es fría (<20°C) o termal (>20°C).
+
 n_temp <- sum(!is.na(datos$TEMPERATUR))
+media_temp <- round( mean(datos$TEMPERATUR, na.rm = TRUE), 2)
+mediana_temp <- median(datos$TEMPERATUR, na.rm = TRUE)
 
 h2 <- ggplot(datos %>% filter(!is.na(TEMPERATUR)), aes(x = TEMPERATUR)) +
   geom_histogram(bins = 9, fill = "#8bbee0", color = "white") +
@@ -46,7 +54,7 @@ h2 <- ggplot(datos %>% filter(!is.na(TEMPERATUR)), aes(x = TEMPERATUR)) +
   ) +
   labs(
     title = "Distribución de temperatura del agua",
-    subtitle = paste0("Rojo = Media (41.75°C)  |  Naranja = Mediana (39°C)  |  n = ", nrow = n_temp),
+    subtitle = paste0("Rojo = Media = ", med_temp = media_temp,  " |  Naranja = Mediana = ", median_temp = mediana_temp,  " |  n = ", nrow = n_temp),
     x = "Temperatura (°C)",
     y = "Número de manantiales"
   )
@@ -61,13 +69,25 @@ guardar_plot(h2, "histograma_temperatura")
 # Sin log, el 95% de los datos se aplasta en la izquierda y no se ve nada.
 
 n_cond <- sum(!is.na(datos$CONDUCTIVIDAD))
+media_cond <- round(mean(datos$CONDUCTIVIDAD, na.rm = TRUE), 2)
+mediana_cond <- round(median(datos$CONDUCTIVIDAD, na.rm = TRUE), 2)
 
 h3 <- ggplot(datos %>% filter(!is.na(CONDUCTIVIDAD)), aes(x = CONDUCTIVIDAD)) +
-  geom_histogram(bins = 9, fill = "darkgreen", color = "white") +
+  geom_histogram(bins = 9, fill = "lightgreen", color = "white") +
+  geom_vline(
+    xintercept = media_cond,
+    color = "firebrick",
+    linetype = "dashed"
+  ) +
+  geom_vline(
+    xintercept = mediana_cond,
+    color = "black",
+    linetype = "dotted"
+  ) +
   scale_x_log10() +
   labs(
     title = "Distribución de conductividad eléctrica (escala log)",
-    subtitle = paste0("Escala logarítmica usada por el rango extremo de valores  |  n = ", nrow = n_cond),
+    subtitle = paste0("Escala logarítmica usada por \nel rango extremo de valores | Media = ", med_cond = media_cond, " | Mediana = ", median_cond = mediana_cond, "|  n = ", nrow = n_cond),
     x = "Conductividad (µS/cm) — escala log",
     y = "Número de manantiales"
   )
@@ -105,3 +125,7 @@ h5 <- ggplot(datos %>% dplyr::filter(!is.na(CALCIO)), aes(x = CALCIO)) +
   )
 print(h5)
 guardar_plot(h5, "histograma_calcio")
+
+sodio_conc <- datos %>% 
+  filter(!is.na(SODIO)) %>%
+  select(SODIO) 
