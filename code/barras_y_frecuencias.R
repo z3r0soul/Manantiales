@@ -224,7 +224,8 @@ guardar_plot(
 
   b4 <- ggplot(datos %>% filter(!is.na(TEMP_CAT), !is.na(PH_LABORATORIO)), aes(x = TEMP_CAT, fill = TEMP_CAT)) +
     geom_bar() +
-    scale_fill_manual(values = c("Tibia"  = "#f4a582",
+    scale_fill_manual(values = c("Fria" = "lightblue",
+                                 "Tibia"  = "#f4a582",
                                  "Termal" = "#d6604d")) +
     guides(fill = "none") +
     geom_text(stat = "count", aes(label = after_stat(count)),

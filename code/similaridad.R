@@ -1,84 +1,92 @@
 # ========================
 # MEDIDAS DE SIMILARIDAD
 # ========================
+top3 <- c("Bicarbonatada", "Clorurada", "Sulfatada")
 
-top3 <- c("Sulfatada", "Clorurada", "Bicarbonatada")
-
-# 1. Preparación y filtrado de datos
-datos_sim <- datos %>%
+df_sim <- datos %>%
   filter(
+    CLASIFICACION_LIMPIA %in% top3,
     !is.na(CLASIFICACION_LIMPIA),
     !is.na(OLOR_BIN),
-    CLASIFICACION_LIMPIA %in% top3
+    !is.na(PH_CAT),
+    !is.na(TEMP_CAT)
   ) %>%
   mutate(
-    # Definir variables como FACTORES para que Gower las trate correctamente
-    CLASIFICACION_LIMPIA = factor(CLASIFICACION_LIMPIA, levels = top3),
-    OLOR_BIN             = factor(OLOR_BIN) # Asume p.ej. "Con olor" / "Sin olor"
-  )
+    # NOMINAL: sin orden entre categorías
+    CLASIFICACION_LIMPIA = factor(CLASIFICACION_LIMPIA),
+    OLOR_BIN             = factor(OLOR_BIN),
+    
+    # ORDINAL: ordered = TRUE le dice a daisy() que hay orden real
+    # y usa distancia de rango en vez de 0/1
+    PH_CAT   = factor(PH_CAT,
+                      levels  = c("Ácido", "Neutro", "Básico"),
+                      ordered = TRUE),
+    TEMP_CAT = factor(TEMP_CAT,
+                      levels  = c("Fría", "Tibia", "Termal"),
+                      ordered = TRUE)
+  ) %>%
+  select(CLASIFICACION_LIMPIA, OLOR_BIN, PH_CAT, TEMP_CAT)
 
-n_sim <- nrow(datos_sim)
-cat("n disponible:", n_sim, "\n")
+cat("Manantiales en el análisis:", nrow(df_sim), "\n")
 
-# 2. Tabla de contingencia y medidas de asociación (entre variables)
-tabla <- table(datos_sim$CLASIFICACION_LIMPIA, datos_sim$OLOR_BIN)
-cat("\n── Tabla de contingencia ──\n")
-print(addmargins(tabla))
-
-cat("\n── Medidas de asociación (Cramér's V, Pearson, etc.) ──\n")
-print(assocstats(tabla))
-
-# =========================================================
-# SIMILARIDAD DE GOWER (Entre Muestras / Manantiales)
-# =========================================================
-
-# Seleccionamos únicamente las columnas de interés
-df_gower <- datos_sim %>% 
-  select(CLASIFICACION_LIMPIA, OLOR_BIN)
-
-# daisy() calcula la MATRIZ DE DISIMILARIDAD (Distancia de Gower)
-# Nota: Si OLOR_BIN es un factor de 2 niveles, se trata como binario nominal.
-dist_gower <- daisy(df_gower, metric = "gower")
-
-# Convertimos la matriz de disimilaridad a MATRIZ DE SIMILARIDAD (1 - d)
+# ============================================================
+# DISTANCIA DE GOWER -> MATRIZ DE SIMILARIDAD
+# ============================================================
+dist_gower       <- daisy(df_sim, metric = "gower")
 matriz_similitud <- 1 - as.matrix(dist_gower)
 
-# Extractores de pares para clasificación
-pares <- combn(1:n_sim, 2)
+# ============================================================
+# RESUMEN POR TIPO DE CLASIFICACIÓN
+# ============================================================
+# Reconstruimos las etiquetas para poder clasificar los pares
+etiquetas <- datos %>%
+  filter(
+    CLASIFICACION_LIMPIA %in% top3,
+    !is.na(CLASIFICACION_LIMPIA),
+    !is.na(OLOR_BIN),
+    !is.na(PH_CAT),
+    !is.na(TEMP_CAT)
+  ) %>%
+  pull(CLASIFICACION_LIMPIA)
 
-# Vector de valores de similaridad de Gower para cada par
-gower_vals <- matriz_similitud[lower.tri(matriz_similitud)]
+n     <- nrow(df_sim)
+pares <- combn(1:n, 2)
 
-# Clasificar los pares
-mismo_tipo <- datos_sim$CLASIFICACION_LIMPIA[pares[1,]] == 
-  datos_sim$CLASIFICACION_LIMPIA[pares[2,]]
-mismo_olor <- datos_sim$OLOR_BIN[pares[1,]] == 
-  datos_sim$OLOR_BIN[pares[2,]]
+# Similaridad para cada par
+sim_vals   <- matriz_similitud[lower.tri(matriz_similitud)]
+tipo_i     <- etiquetas[pares[1,]]
+tipo_j     <- etiquetas[pares[2,]]
+mismo_tipo <- tipo_i == tipo_j
 
-# Resultados resumidos
-cat("\n── Similaridad de Gower promedio por tipo de par ──\n")
-cat("  Mismo tipo Y mismo olor:  ", 
-    round(mean(gower_vals[ mismo_tipo &  mismo_olor]), 3), "\n")
-cat("  Mismo tipo, olor distinto:", 
-    round(mean(gower_vals[ mismo_tipo & !mismo_olor]), 3), "\n")
-cat("  Distinto tipo, mismo olor:", 
-    round(mean(gower_vals[!mismo_tipo &  mismo_olor]), 3), "\n")
-cat("  Todo distinto:            ", 
-    round(mean(gower_vals[!mismo_tipo & !mismo_olor]), 3), "\n")
+# Promedio de similaridad dentro y entre tipos
+cat("\n── Similaridad promedio DENTRO de cada tipo ──\n")
+for (tipo in top3) {
+  mask <- tipo_i == tipo & tipo_j == tipo
+  cat(sprintf("  %-15s : %.3f  (n pares = %d)\n",
+              tipo, mean(sim_vals[mask]), sum(mask)))
+}
 
-# Tabulación ordenada y porcentajes
-resumen_gower <- data.frame(
-  gower_sim = gower_vals,
-  tipo_par = case_when(
-    mismo_tipo &  mismo_olor ~ "Mismo tipo y olor",
-    mismo_tipo & !mismo_olor ~ "Mismo tipo, olor distinto",
-    !mismo_tipo &  mismo_olor ~ "Distinto tipo, mismo olor",
-    TRUE                     ~ "Todo distinto"
-  )
+cat("\n── Similaridad promedio ENTRE tipos distintos ──\n")
+pares_entre <- data.frame(
+  tipo_i   = as.character(tipo_i),
+  tipo_j   = as.character(tipo_j),
+  sim      = sim_vals
 ) %>%
-  count(tipo_par, gower_sim) %>%
-  mutate(pct = round(n / sum(n) * 100, 1)) %>%
-  arrange(desc(gower_sim))
+  filter(tipo_i != tipo_j) %>%
+  mutate(par = paste(pmin(tipo_i, tipo_j),
+                     pmax(tipo_i, tipo_j), sep = " vs ")) %>%
+  group_by(par) %>%
+  summarise(sim_media = round(mean(sim), 3),
+            n_pares   = n(), .groups = "drop") %>%
+  arrange(desc(sim_media))
 
-cat("\n── Distribución de frecuencias de Similaridad de Gower ──\n")
-print(resumen_gower)
+print(pares_entre)
+
+# ============================================================
+# DISTRIBUCIÓN GENERAL DE SIMILARIDADES
+# ============================================================
+cat("\n── Resumen de la distribución de similaridades ──\n")
+cat(sprintf("  Mínimo  : %.3f\n", min(sim_vals)))
+cat(sprintf("  Mediana : %.3f\n", median(sim_vals)))
+cat(sprintf("  Media   : %.3f\n", mean(sim_vals)))
+cat(sprintf("  Máximo  : %.3f\n", max(sim_vals)))
