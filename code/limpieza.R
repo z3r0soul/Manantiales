@@ -20,6 +20,7 @@ datos <- datos %>%
     CALCIO        = na_if(CALCIO, 0),
     SODIO         = na_if(SODIO, 0),
     CONDUCTIVIDAD = na_if(CONDUCTIVIDAD, 0),
+    PH_LABORATORIO = na_if(PH_LABORATORIO, 0),
     
     # 2. Extracción del AÑO y transformación de la columna FECHA
     # Aquí extraemos el AÑO de la columna FECHA y lo guardamos en una nueva columna llamada ANIO.
@@ -46,7 +47,6 @@ datos <- datos %>%
     # pues estas llevan años pasando por piedras que favorecen la mineralización
     # así como las piedras calizas
     
-    PH_LABORATORIO = ifelse(PH_LABORATORIO <= 4, NA, PH_LABORATORIO),
     TEMPERATUR     = na_if(TEMPERATUR, 0),
     
     # 5. Binario: Con olor vs Sin olor (excluye NA y vacíos)
@@ -78,12 +78,12 @@ datos <- datos %>%
     # (geotérmica baja), termal >50°C (geotérmica alta / fumarola).
     
     TEMP_CAT = case_when(
-      TEMPERATUR < 20  ~ NA_character_,
+      TEMPERATUR < 20  ~ "Fria",
       TEMPERATUR <= 50 ~ "Tibia",
       TEMPERATUR > 50  ~ "Termal",
       TRUE ~ NA_character_
     ),
-    TEMP_CAT = factor(TEMP_CAT, levels = c("Tibia", "Termal"))
+    TEMP_CAT = factor(TEMP_CAT, levels = c("Fria", "Tibia", "Termal"))
   )
 
 # SECCION 2: Filtrado de variables
