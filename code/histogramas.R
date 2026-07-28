@@ -23,7 +23,7 @@ h1 <- ggplot(datos %>% filter(!is.na(PH_LABORATORIO)), aes(x = PH_LABORATORIO)) 
   ) +
   labs(
     title = "Distribución del pH en manantiales colombianos",
-    subtitle = paste0("Azul = Media = ", nmed = media_ph,  "|  Amarillo = Mediana ", nmedian = mediana_ph,  "|  n =" , nrow = n_ph),
+    subtitle = paste0("Azul = Media = ", nmed = media_ph,  "|  Amarillo = Mediana = ", nmedian = mediana_ph,  "|  n =" , nrow = n_ph),
     x = "pH (laboratorio)",
     y = "Número de manantiales"
   )
@@ -99,13 +99,16 @@ guardar_plot(h3, "histograma_conductividad")
 
 # GRÁFICO 5.4: HISTOGRAMA DE SODIO
 n_sodio <- sum(!is.na(datos$SODIO))
+media_sodio = round(mean(datos$SODIO, na.rm = TRUE), 2)
+mediana_sodio = round(median(datos$SODIO, na.rm = TRUE), 2)
 
 h4 <- ggplot(datos %>% filter(!is.na(SODIO)), aes(x = SODIO)) +
   geom_histogram(bins = 9, fill = "#a82339", color = "white") +
   scale_x_log10() +
   labs(
     title = "Distribución de las concentraciones de sodio",
-    subtitle = paste0("Rojo = Media (706.78)  |  Naranja = Mediana (170.8)  |  n =", nrow = n_sodio),
+    subtitle = paste0("Media = " , n_med = media_sodio, " | Mediana = ", n_median = mediana_sodio, 
+                      " |  n = ", nrow = n_sodio),
     x = "Concentración de sodio (mg/L)",
     y = "Número de manantiales"
   )
@@ -114,18 +117,16 @@ guardar_plot(h4, "histograma_sodio")
 
 # GRÁFICO 5.5: HISTOGRAMA DE CALCIO
 n_calcio <- sum(!is.na(datos$CALCIO))
+media_calcio <- mean(datos$CALCIO, na.rm = TRUE)
+mediana_calcio <- median(datos$CALCIO, na.rm = TRUE)
 
 h5 <- ggplot(datos %>% dplyr::filter(!is.na(CALCIO)), aes(x = CALCIO)) +
   geom_histogram(bins = 9, fill = "#a82339", color = "white") +
   labs(
     title = "Distribución de las concentraciones de calcio",
-    subtitle = paste0("n = ", nrow = n_calcio),
+    subtitle = paste0("Media = ", n_med = media_calcio, " | Mediana = ", median_calcio = mediana_calcio, " | n = ", nrow = n_calcio),
     x = "Concentración de calcio (mg/L)",
     y = "Número de manantiales"
   )
 print(h5)
 guardar_plot(h5, "histograma_calcio")
-
-sodio_conc <- datos %>% 
-  filter(!is.na(SODIO)) %>%
-  select(SODIO) 
