@@ -7,69 +7,55 @@ cat("\n=============================================================\n
     \n=============================================================\n" )
 
 # =============================================================
-# MATRICES DE COVARIANZA
-# =============================================================
-cat("\n=============================================================\n
-      Generando matriz de covarianza:
-      1. Variables hidroquímicas y su conductividad
-    \n=============================================================\n" )
-matriz_cov <- datos %>%
-  select(
-    SODIO,
-    CALCIO,
-    CONDUCTIVIDAD
-  ) %>%
-  cov(
-    use = "complete.obs"
-    )
-
-print (matriz_cov)
-# =============================================================
 # MATRICES DE CORRELACION
 # =============================================================
 cat("\n=============================================================\n
-      Generando matrices de correlación:
+      Generando matrices de covarianza y correlación:
       1. Variables hidroquímicas y su conductividad (Vista General)
-      2. Variables hidroquimicas segun tipo principal de agua
     \n=============================================================\n" )
 
 cat(" === Vista matriz de correlación general ===\n")
 
-variables <- datos %>%
-  select(SODIO,
-         CALCIO,
-         CONDUCTIVIDAD)
+vars_sel <- datos %>%
+  filter(TEMPERATUR > 0) %>%
+  select(SODIO, CALCIO, CONDUCTIVIDAD) %>%
+  na.omit()
 
-cor_general <- cor(variables,
-    use = "complete.obs",
-    method = "pearson"
+# === Matriz de covarianza
+
+cov_mat <- cov(vars_sel)
+cat("\nMatriz de covarianza:\n")
+print(round(cov_mat, 2))
+
+# === Matriz de correlacion
+
+cor_mat <- cor(vars_sel)
+cat("\nMatriz de correlación:\n")
+print(round(cor_mat, 3))
+
+# Grafico de covarianza
+ggcorrplot(
+  cov_mat,
+  method   = "square",
+  type     = "full",        # <- full para ver toda la matriz
+  lab      = TRUE,
+  lab_size = 4,
+  colors   = c("#d73027", "white", "#1a9850"),
+  title    = "Matriz de covarianza — Sodio, Calcio y Conductividad",
+  ggtheme  = theme_minimal()
 )
-print(cor_general)
 
-# Correlación de la Conductividad con el Sodio y el Calcio
-# A partir de la clasficación principal del agua
-
-datos_top3 %>%
-  
-  group_by(CLASIFICACION_LIMPIA) %>%
-  
-  summarise(
-    
-    correlacion_s = cor(
-      CONDUCTIVIDAD,
-      SODIO,
-      use = "complete.obs",
-      method = "pearson"
-    ),
-    correlacion_c = cor(
-        CONDUCTIVIDAD,
-        CALCIO,
-        use = "complete.obs",
-        method = "pearson"
-      ),
-    n = n()
-  )
-
+# Grafico de correlacion de Pearson
+ggcorrplot(
+  cor_mat,
+  method   = "square",      # <- square en lugar de circle
+  type     = "full",
+  lab      = TRUE,
+  lab_size = 5,
+  colors   = c("#d73027", "white", "#1a9850"),
+  title    = "Matriz de correlación — Sodio, Calcio y Conductividad",
+  ggtheme  = theme_minimal()
+)
 
 # =============================================================
 # DIAGRAMAS DE DISPERSIÓN
@@ -133,28 +119,42 @@ guardar_plot(
 
 # MATRIZ DIAGRAMAS DE DISPERSIÓN
 cat("\n=============================================================\n
-      Generando matriz de diagramas de dispersión
+      Generando matriz de diagramas de dispersión (escala log)
     \n=============================================================\n" )
 
 matriz_diag <- datos %>%
-  select(
-    SODIO,
-    CALCIO,
-    CONDUCTIVIDAD
+  filter(TEMPERATUR > 0) %>%
+  select(SODIO, CALCIO, CONDUCTIVIDAD) %>%
+  na.omit() %>%
+  # Transformación log para manejar los outliers extremos
+  # log1p usa log(x+1) para evitar log(0) = -Inf
+  mutate(
+    SODIO         = log1p(SODIO),
+    CALCIO        = log1p(CALCIO),
+    CONDUCTIVIDAD = log1p(CONDUCTIVIDAD)
   ) %>%
   ggpairs(
     upper = list(
-      continuous = "points"
+      continuous = wrap("cor", method = "spearman", size = 4)
     ),
     lower = list(
-      continuous = "points"
+      continuous = wrap("smooth", method = "lm",
+                        color = "#2c3e8c", alpha = 0.3,
+                        se = FALSE)
     ),
     diag = list(
-      continuous = "densityDiag"
-    )
-  )
+      continuous = wrap("barDiag", fill = "#2c3e8c",
+                        color = "white", bins = 9)
+    ),
+    columnLabels = c("Sodio log(mg/L)",
+                     "Calcio log(mg/L)",
+                     "Conductividad log(µS/cm)")
+  ) +
+  labs(title = "Matriz de dispersión — Sodio, Calcio y Conductividad (escala log)") +
+  theme_minimal()
 
 print(matriz_diag)
+
 
 # =============================================================
 # DIAGRAMAS DE DISPERSIÓN PARA 3 VARIABLES
@@ -176,14 +176,14 @@ datos_3d <- datos %>%
     TRUE                                  ~ "Resto de manantiales"
   ))
 
+print(datos_3d)
+
 #Def. paleta de colores
 colores <- c(
   "Sistema Paipa-Iza"    = "#e74c3c", # Rojo
   "Salmuera extrema"     = "#e67e22", # Naranja
   "Resto de manantiales" = "#402816"  # Marrón oscuro
 )
-
-# ---- Generar matriz de diagramas de disp. ----
 
 # Calcular n_3d para el título dinámico
 n_3d <- nrow(datos_3d)
@@ -242,7 +242,7 @@ g_kendall <- ggcorrplot(cor_kendall,
                         lab_size  = 3.5,
                         colors    = c("#e74c3c", "white", "#2c3e8c"),
                         title     = paste0("Correlación de Kendall  |  n = ", n_cor),
-                        p.mat     = cor_pmat(datos_cor_completos, method = "spearman"),
+                        p.mat     = cor_pmat(datos_cor_completos, method = "kendall"),
                         sig.level = 0.05,
                         insig     = "pch",
                         ggtheme   = theme_minimal())
