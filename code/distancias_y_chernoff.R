@@ -33,7 +33,7 @@ hc_manhattan <- hclust(dist_manhattan, method = "complete")
 hc_canberra  <- hclust(dist_canberra,  method = "complete")
 
 # Dendrogramas
-par(mfrow = c(1, 2))
+dendrogramas <- par(mfrow = c(1, 2))
 plot(hc_manhattan,
      main = paste0("Manhattan  |  n = ", n_clust),
      xlab = "", ylab = "Distancia",
@@ -43,6 +43,8 @@ plot(hc_canberra,
      xlab = "", ylab = "Distancia",
      labels = FALSE, hang = -1, cex.main = 0.9)
 par(mfrow = c(1, 1))
+
+print(dendrogramas)
 
 # Asignar grupos
 k <- 3
@@ -90,7 +92,6 @@ g_grupos <- ggplot(datos_clust,
   theme_minimal()
 
 print(g_grupos)
-guardar_plot(g_grupos, "grupos_scatterplot")
 
 # Rostros de Chernoff
 perfiles <- datos_clust %>%
@@ -107,7 +108,9 @@ perfiles <- datos_clust %>%
 rownames(perfiles)       <- paste("Grupo", perfiles$grupo_manhattan)
 perfiles$grupo_manhattan <- NULL
 
-faces(perfiles,
+chernoff <- faces(perfiles,
       face.type = 1,
       main      = paste0("Rostros de Chernoff  |  n = ", n_clust),
       labels    = rownames(perfiles))
+
+print(chernoff)

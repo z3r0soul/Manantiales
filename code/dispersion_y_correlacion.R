@@ -34,7 +34,9 @@ cat("\nMatriz de correlación:\n")
 print(round(cor_mat, 3))
 
 # Grafico de covarianza
-ggcorrplot(
+
+print(" \n===Generando gráfico de matriz de covarianza ===")
+matriz_cov <- ggcorrplot(
   cov_mat,
   method   = "square",
   type     = "full",        # <- full para ver toda la matriz
@@ -45,8 +47,10 @@ ggcorrplot(
   ggtheme  = theme_minimal()
 )
 
+print(matriz_cov)
+print(" \n===Generando gráfico de la correlación de Pearson ===")
 # Grafico de correlacion de Pearson
-ggcorrplot(
+graf_corr <- ggcorrplot(
   cor_mat,
   method   = "square",      # <- square en lugar de circle
   type     = "full",
@@ -57,11 +61,16 @@ ggcorrplot(
   ggtheme  = theme_minimal()
 )
 
+print(graf_corr)
+
 # =============================================================
 # DIAGRAMAS DE DISPERSIÓN
 # =============================================================
 # 10.1 Diagrama de dispersión para ver la correlación entre el sodio
 # y la conductividad
+
+print(" \n===Generando gráfico de la correlación de Pearson
+      entre el sodio y la conductividad ===")
 
 disp1 <- datos %>% 
   filter ( !is.na(SODIO),
@@ -82,15 +91,10 @@ disp1 <- datos %>%
 
 print(disp1)
 
-guardar_plot(
-  disp1,
-  "dispersion_sodio_vs_conductividad",
-  "graficos_dispersion",
-  tipo = "ggplot"
-)
 # 10.2 Diagrama de dispersión para ver la correlación entre el calcio
 # y la conductividad
 
+print(" \n===Generando diagrama de dispersión entre el Calcio y la conducvidad ===")
 disp2 <- datos %>% 
   filter ( !is.na(CALCIO),
            !is.na(CONDUCTIVIDAD)
@@ -109,13 +113,6 @@ disp2 <- datos %>%
   )
 
 print(disp2)
-
-guardar_plot(
-  disp2,
-  "dispersion_calcio_vs_conductividad",
-  "graficos_dispersion",
-  tipo = "ggplot"
-)
 
 # MATRIZ DIAGRAMAS DE DISPERSIÓN
 cat("\n=============================================================\n
@@ -205,11 +202,16 @@ legend("topleft",
        col    = colores,
        pch    = c(17, 17, 16),
        bty    = "n")
-guardar_plot(g3d_plot, "scatterplot3d_sodio_calcio_conductividad", tipo = "base")
 
 #============================
 # Correlación de Spearman y Kendall
 #============================
+
+cat("\n=============================================================\n
+      Generando diagramas sobre la correlación de Spearman y Kendall
+    \n=============================================================\n" )
+
+
 datos_cor <- datos %>%
   select(PH_LABORATORIO, TEMPERATUR, CONDUCTIVIDAD, SODIO, CALCIO)
 
@@ -232,7 +234,6 @@ g_spearman <- ggcorrplot(cor_spearman,
                          insig     = "pch",    # deja en blanco las no significativas
                          ggtheme   = theme_minimal())
 print(g_spearman)
-guardar_plot(g_spearman, "correlacion_spearman", tipo = "ggplot")
 
 # Kendall 
 g_kendall <- ggcorrplot(cor_kendall,
@@ -247,4 +248,3 @@ g_kendall <- ggcorrplot(cor_kendall,
                         insig     = "pch",
                         ggtheme   = theme_minimal())
 print(g_kendall)
-guardar_plot(g_kendall, "correlacion_kendall", tipo = "ggplot")
