@@ -12,6 +12,8 @@ rm(list = ls())
 if(!require("here")) install.packages("here")
 
 library(here)
+# Cierra cualquier dispositivo gráfico colgado de una corrida anterior
+while (!is.null(dev.list())) dev.off()
 
 source(here("code", "funciones", "funciones.r"))
 

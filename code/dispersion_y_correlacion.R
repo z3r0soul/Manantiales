@@ -94,7 +94,7 @@ print(disp1)
 # 10.2 Diagrama de dispersión para ver la correlación entre el calcio
 # y la conductividad
 
-print(" \n===Generando diagrama de dispersión entre el Calcio y la conducvidad ===")
+print(" \n===Generando diagrama de dispersión entre el Calcio y la conductividad ===")
 disp2 <- datos %>% 
   filter ( !is.na(CALCIO),
            !is.na(CONDUCTIVIDAD)
